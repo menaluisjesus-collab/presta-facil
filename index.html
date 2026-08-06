@@ -141,7 +141,7 @@
         }
     </style>
 
-    <!-- Firebase SDK (Versión Compatible) -->
+    <!-- Firebase SDK Compatibles -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
@@ -194,15 +194,15 @@
     </div>
 
     <script>
-        // Configuración de Firebase
+        // Configuración oficial de Firebase con tus credenciales reales
         const firebaseConfig = {
-            apiKey: "PEGA_AQUÍ_TU_API_KEY_COMPLETA_DE_FIREBASE", 
+            apiKey: "AIzaSyBuu3o8cpHPTk_hhaQhhaqOTr44XHoqu3U",
             authDomain: "prestafacil-572fc.firebaseapp.com",
             databaseURL: "https://prestafacil-572fc-default-rtdb.firebaseio.com",
             projectId: "prestafacil-572fc",
             storageBucket: "prestafacil-572fc.firebasestorage.app",
             messagingSenderId: "156821899098",
-            appId: "1:156821899098:web:cf8a9a61c4",
+            appId: "1:156821899098:web:cf8a9a61c48356befe9563",
             measurementId: "G-7Q9S64FG4T"
         };
 
@@ -211,11 +211,10 @@
         const database = firebase.database();
         const clientsRef = database.ref('clientes');
 
-        // Formulario y Elementos DOM
         const loanForm = document.getElementById('loanForm');
         const clientList = document.getElementById('clientList');
 
-        // Guardar cliente en Firebase Realtime Database
+        // Guardar cliente
         loanForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
@@ -247,7 +246,7 @@
             });
         });
 
-        // Escuchar datos en tiempo real desde Firebase
+        // Escuchar datos en tiempo real
         clientsRef.on('value', (snapshot) => {
             clientList.innerHTML = '';
             const data = snapshot.val();
