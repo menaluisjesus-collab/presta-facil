@@ -14,63 +14,64 @@
             --danger: #ef4444;
             --card-bg: #ffffff;
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f1f5f9; color: #334155; padding-bottom: 40px; }
-        
-        .header { background: var(--dark); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .header h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; }
-        .header small { background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
-        
-        .nav { display: flex; gap: 8px; background: white; padding: 8px 15px; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
-        .nav button { padding: 10px 18px; border: none; background: none; font-weight: 600; cursor: pointer; color: #64748b; border-radius: 8px; transition: all 0.2s; white-space: nowrap; }
-        .nav button.active { background: var(--primary); color: white; }
-        
-        .container { max-width: 1000px; margin: 25px auto; padding: 0 15px; }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 22px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .card h3 { font-size: 1.1rem; color: var(--dark); margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
 
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        .stat-card { padding: 18px; border-radius: 10px; background: #f8fafc; border-left: 5px solid var(--primary); }
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f1f5f9; color: var(--dark); padding-bottom: 50px; }
+
+        .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
+        .header h2 { font-size: 1.25rem; margin-bottom: 5px; }
+        .header small { background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; }
+
+        .nav { display: flex; gap: 8px; background: white; padding: 10px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; }
+        .nav button { padding: 10px 18px; border: none; background: #f1f5f9; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; color: #64748b; }
+        .nav button.active { background: var(--primary); color: white; }
+
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h3 { font-size: 1.1rem; color: var(--dark); margin-bottom: 15px; }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { padding: 18px; border-radius: 10px; background: #f8fafc; border-left: 4px solid var(--primary); }
         .stat-card.success { border-color: var(--success); }
         .stat-card.warning { border-color: var(--warning); }
-        .stat-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 6px; border: none; padding: 0; font-weight: 600; text-transform: uppercase; }
-        .stat-card p { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
+        .stat-card h3 { font-size: 0.85rem; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-card p { font-size: 1.5rem; font-weight: bold; }
 
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: #475569; }
-        .form-group input, .form-group select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border 0.2s; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
-        
-        .btn { padding: 11px 20px; border: none; border-radius: 8px; background: var(--primary); color: white; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: background 0.2s; display: inline-block; width: 100%; text-align: center; }
-        .btn:hover { opacity: 0.95; }
-        .btn-success { background: var(--success); }
-        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.92rem; }
-        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        table th { background: #f8fafc; color: #475569; font-weight: 600; }
+        .btn { padding: 11px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-block; width: 100%; text-align: center; }
+        .btn:hover { opacity: 0.95; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        table th { background: #f8fafc; color: #64748b; font-weight: 600; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
+
         /* Modal Ticket */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); align-items:center; justify-content:center; z-index: 1000; padding: 15px; }
-        .modal-body { background:white; padding:24px; border-radius:12px; max-width:360px; width:100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .ticket-box { background: #fff8f0; border: 1px dashed #d97706; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; margin-bottom: 15px; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99; justify-content:center; align-items:center; }
+        .modal-body { background:white; padding:20px; border-radius:12px; max-width:400px; width:90%; }
+        .ticket-box { background: #fff8f0; border: 1px dashed #d97706; padding: 15px; font-family: monospace; font-size: 0.85rem; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h2>📱 E&S PRESTA FÁCIL PRO</h2>
+    <h2>📲 E&S PRESTA FÁCIL PRO</h2>
     <small>Empresa: <b>E&S Presta Fácil</b></small>
 </div>
 
 <div class="nav">
-    <button class="tab-btn active" onclick="switchTab('dashboard', event)">🏠 Panel Principal</button>
-    <button class="tab-btn" onclick="switchTab('clientes', event)">👥 Clientes</button>
-    <button class="tab-btn" onclick="switchTab('prestamos', event)">💰 Crear Préstamo</button>
-    <button class="tab-btn" onclick="switchTab('cobradores', event)">🚶 Ruta de Cobro</button>
+    <button class="tab-btn active" onclick="switchTab('dashboard')">Panel Principal</button>
+    <button class="tab-btn" onclick="switchTab('clientes')">Clientes</button>
+    <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
+    <button class="tab-btn" onclick="switchTab('cobros')">Ruta de Cobro</button>
 </div>
 
 <div class="container">
@@ -115,10 +116,10 @@
                     <input type="text" id="cli-telefono" required placeholder="809-000-0000">
                 </div>
                 <div class="form-group">
-                    <label>Dirección</label>
-                    <input type="text" id="cli-direccion" required placeholder="Calle, Sector, Número">
+                    <label>Dirección / Sector</label>
+                    <input type="text" id="cli-direccion" required placeholder="Calle 12 #34, Sector">
                 </div>
-                <button type="submit" class="btn">Guardar Cliente</button>
+                <button type="submit" class="btn btn-success">Guardar Cliente</button>
             </form>
         </div>
 
@@ -143,18 +144,18 @@
     <div id="prestamos" class="tab-content">
         <div class="card">
             <h3>💰 Generar Nuevo Préstamo</h3>
-            <form id="form-prestamo" onsubmit="crearPrestamo(event)">
+            <form id="form-prestamo" onsubmit="guardarPrestamo(event)">
                 <div class="form-group">
                     <label>Seleccionar Cliente</label>
                     <select id="pres-cliente" required></select>
                 </div>
                 <div class="form-group">
                     <label>Monto del Préstamo (RD$)</label>
-                    <input type="number" id="pres-monto" value="10000" required>
+                    <input type="number" id="pres-monto" required min="100" placeholder="10000">
                 </div>
                 <div class="form-group">
                     <label>Tasa de Interés (%)</label>
-                    <input type="number" id="pres-interes" value="10" required>
+                    <input type="number" id="pres-interes" required value="20">
                 </div>
                 <div class="form-group">
                     <label>Modalidad de Pago</label>
@@ -167,23 +168,23 @@
                 </div>
                 <div class="form-group">
                     <label>Número de Cuotas</label>
-                    <input type="number" id="pres-cuotas" value="22" required>
+                    <input type="number" id="pres-cuotas" required value="10">
                 </div>
-                <button type="submit" class="btn btn-success">Crear Préstamo y Generar Tabla</button>
+                <button type="submit" class="btn btn-success">Crear Préstamo</button>
             </form>
         </div>
     </div>
 
-    <!-- COBRADORES -->
-    <div id="cobradores" class="tab-content">
+    <!-- RUTA DE COBRO -->
+    <div id="cobros" class="tab-content">
         <div class="card" style="overflow-x: auto;">
-            <h3>🚶 Ruta de Cobro Diaria</h3>
+            <h3>📋 Cobros Pendientes</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Cliente</th>
-                        <th>Préstamo ID</th>
-                        <th>Cuota Pendiente</th>
+                        <th>Cuota (RD$)</th>
+                        <th>Faltantes</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -194,37 +195,38 @@
 
 </div>
 
-<!-- TICKET RECIBO MODAL -->
-<div id="ticket-modal" class="modal">
+<!-- MODAL TICKET WHATSAPP -->
+<div id="modal-ticket" class="modal">
     <div class="modal-body">
-        <div id="ticket-content" class="ticket-box"></div>
-        <button class="btn btn-success" style="margin-bottom:8px;" onclick="compartirWhatsApp()">📱 Enviar por WhatsApp</button>
-        <button class="btn" style="margin-bottom:8px;" onclick="imprimirTicket()">🖨️ Imprimir Recibo</button>
-        <button class="btn" style="background:#64748b;" onclick="cerrarTicket()">Cerrar</button>
+        <h3>✅ Cobro Registrado</h3>
+        <p style="font-size: 0.85rem; color:#64748b;">Recibo generado para WhatsApp:</p>
+        <div id="ticket-text" class="ticket-box"></div>
+        <br>
+        <button id="btn-wa" class="btn btn-success" style="margin-bottom:8px;">Enviar por WhatsApp 📲</button>
+        <button class="btn" style="background:#cbd5e1; color:#1e293b;" onclick="cerrarModal()">Cerrar</button>
     </div>
 </div>
 
 <script>
+    // BASE DE DATOS LOCAL
     let db = {
         clientes: JSON.parse(localStorage.getItem('es_clientes')) || [],
         prestamos: JSON.parse(localStorage.getItem('es_prestamos')) || [],
         pagos: JSON.parse(localStorage.getItem('es_pagos')) || []
     };
 
-    let reciboActual = null;
-
     function guardarDB() {
         localStorage.setItem('es_clientes', JSON.stringify(db.clientes));
         localStorage.setItem('es_prestamos', JSON.stringify(db.prestamos));
         localStorage.setItem('es_pagos', JSON.stringify(db.pagos));
-        actualizarVistas();
+        render();
     }
 
-    function switchTab(tabId, e) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        if (e && e.target) e.target.classList.add('active');
+        event.target.classList.add('active');
     }
 
     function guardarCliente(e) {
@@ -239,157 +241,145 @@
         db.clientes.push(cliente);
         guardarDB();
         document.getElementById('form-cliente').reset();
-        alert('Cliente registrado con éxito');
+        alert('Cliente registrado con éxito.');
     }
 
-    function crearPrestamo(e) {
+    function guardarPrestamo(e) {
         e.preventDefault();
-        const monto = parseFloat(document.getElementById('pres-monto').value);
-        const interesPct = parseFloat(document.getElementById('pres-interes').value);
-        const numCuotas = parseInt(document.getElementById('pres-cuotas').value);
         const clienteId = document.getElementById('pres-cliente').value;
+        const monto = parseFloat(document.getElementById('pres-monto').value);
+        const interes = parseFloat(document.getElementById('pres-interes').value);
+        const cuotas = parseInt(document.getElementById('pres-cuotas').value);
+        const modalidad = document.getElementById('pres-modalidad').value;
 
-        if(!clienteId) { alert('Por favor seleccione un cliente primero'); return; }
-
-        const interesTotal = monto * (interesPct / 100);
-        const totalPagar = monto + interesTotal;
-        const valorCuota = totalPagar / numCuotas;
+        const totalPagar = monto + (monto * (interes / 100));
+        const valorCuota = totalPagar / cuotas;
 
         const prestamo = {
-            id: 'P-' + Math.floor(1000 + Math.random() * 9000),
-            clienteId: clienteId,
-            montoOriginal: monto,
-            interesTotal: interesTotal,
+            id: Date.now(),
+            clienteId: parseInt(clienteId),
+            monto: monto,
             totalPagar: totalPagar,
             valorCuota: valorCuota,
-            numCuotas: numCuotas,
-            saldoPendiente: totalPagar,
-            modalidad: document.getElementById('pres-modalidad').value,
+            cuotasTotales: cuotas,
+            cuotasPagadas: 0,
+            modalidad: modalidad,
             estado: 'Activo'
         };
 
         db.prestamos.push(prestamo);
         guardarDB();
-        alert('Préstamo creado con éxito. Valor de cuota: RD$ ' + valorCuota.toFixed(2));
-        switchTab('cobradores');
+        document.getElementById('form-prestamo').reset();
+        alert('Préstamo registrado exitosamente.');
     }
 
     function registrarPago(prestamoId) {
         const prestamo = db.prestamos.find(p => p.id === prestamoId);
-        const cliente = db.clientes.find(c => c.id == prestamo.clienteId);
+        const cliente = db.clientes.find(c => c.id === prestamo.clienteId);
 
-        if (prestamo.saldoPendiente <= 0) {
-            alert('Este préstamo ya está saldado.');
-            return;
+        if(prestamo.cuotasPagadas < prestamo.cuotasTotales) {
+            prestamo.cuotasPagadas += 1;
+            if(prestamo.cuotasPagadas === prestamo.cuotasTotales) {
+                prestamo.estado = 'Finalizado';
+            }
+
+            const pago = {
+                id: Date.now(),
+                prestamoId: prestamo.id,
+                monto: prestamo.valorCuota,
+                fecha: new Date().toLocaleDateString()
+            };
+            db.pagos.push(pago);
+            guardarDB();
+
+            // Generar Ticket
+            mostrarTicket(cliente, prestamo, pago);
         }
+    }
 
-        const montoPago = prestamo.valorCuota;
-        prestamo.saldoPendiente -= montoPago;
-        if (prestamo.saldoPendiente <= 0) prestamo.estado = 'Finalizado';
+    function mostrarTicket(cliente, prestamo, pago) {
+        const textoTicket = 
+`==========================
+   E&S PRESTA FÁCIL PRO   
+  RECIBO DE PAGO OFICIAL  
+==========================
+Fecha: ${pago.fecha}
+Cliente: ${cliente.nombre}
+Cédula: ${cliente.cedula}
+--------------------------
+Cuota Pagada: RD$ ${prestamo.valorCuota.toFixed(2)}
+Modalidad: ${prestamo.modalidad}
+Progreso: ${prestamo.cuotasPagadas} de ${prestamo.cuotasTotales} cuotas
+Saldo Restante: RD$ ${(prestamo.totalPagar - (prestamo.cuotasPagadas * prestamo.valorCuota)).toFixed(2)}
+--------------------------
+¡Gracias por mantener su
+crédito al día con nosotros!`;
 
-        const pago = {
-            id: 'R-' + Date.now().toString().slice(-6),
-            prestamoId: prestamo.id,
-            clienteNombre: cliente ? cliente.nombre : 'Cliente',
-            clienteTelefono: cliente ? cliente.telefono : '',
-            montoPagado: montoPago,
-            saldoRestante: prestamo.saldoPendiente,
-            fechaHora: new Date().toLocaleString()
+        document.getElementById('ticket-text').innerText = textoTicket;
+        
+        const btnWa = document.getElementById('btn-wa');
+        btnWa.onclick = function() {
+            const tel = cliente.telefono.replace(/[^0-9]/g, '');
+            const url = `https://api.whatsapp.com/send?phone=1${tel}&text=${encodeURIComponent(textoTicket)}`;
+            window.open(url, '_blank');
         };
 
-        db.pagos.push(pago);
-        reciboActual = pago;
-        guardarDB();
-        mostrarTicket(pago);
+        document.getElementById('modal-ticket').style.display = 'flex';
     }
 
-    function mostrarTicket(pago) {
-        const modal = document.getElementById('ticket-modal');
-        const content = document.getElementById('ticket-content');
-        content.innerHTML = `
-            <b>E&S PRESTA FÁCIL PRO</b><br>
-            ----------------------------------<br>
-            <b>Recibo:</b> ${pago.id}<br>
-            <b>Fecha:</b> ${pago.fechaHora}<br>
-            <b>Cliente:</b> ${pago.clienteNombre}<br>
-            ----------------------------------<br>
-            <b>Pago Recibido:</b> RD$ ${pago.montoPagado.toFixed(2)}<br>
-            <b>Saldo Restante:</b> RD$ ${pago.saldoRestante.toFixed(2)}<br>
-            ----------------------------------<br>
-            ¡Gracias por su pago puntual!
-        `;
-        modal.style.display = 'flex';
+    function cerrarModal() {
+        document.getElementById('modal-ticket').style.display = 'none';
     }
 
-    function cerrarTicket() {
-        document.getElementById('ticket-modal').style.display = 'none';
-    }
+    function render() {
+        // Render Clientes
+        const tablaCli = document.getElementById('tabla-clientes');
+        const selectCli = document.getElementById('pres-cliente');
+        tablaCli.innerHTML = '';
+        selectCli.innerHTML = '<option value="">Seleccione un cliente...</option>';
 
-    function compartirWhatsApp() {
-        if (!reciboActual) return;
-        const texto = `*E&S PRESTA FÁCIL*
-Recibo: ${reciboActual.id}
-Fecha: ${reciboActual.fechaHora}
-Cliente: ${reciboActual.clienteNombre}
-*Pago Recibido:* RD$ ${reciboActual.montoPagado.toFixed(2)}
-*Saldo Pendiente:* RD$ ${reciboActual.saldoRestante.toFixed(2)}
-
-¡Gracias por su pago!`;
-        const url = `https://api.whatsapp.com/send?phone=${reciboActual.clienteTelefono.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(texto)}`;
-        window.open(url, '_blank');
-    }
-
-    function imprimirTicket() {
-        const windowPrint = window.open('', '', 'width=400,height=600');
-        windowPrint.document.write('<pre>' + document.getElementById('ticket-content').innerText + '</pre>');
-        windowPrint.document.close();
-        windowPrint.focus();
-        windowPrint.print();
-        windowPrint.close();
-    }
-
-    function actualizarVistas() {
-        const tClientes = document.getElementById('tabla-clientes');
-        const selectCliente = document.getElementById('pres-cliente');
-        tClientes.innerHTML = '';
-        selectCliente.innerHTML = '<option value="">-- Seleccionar --</option>';
-        
         db.clientes.forEach(c => {
-            tClientes.innerHTML += `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.cedula}</td><td>${c.telefono}</td><td>${c.direccion}</td></tr>`;
-            selectCliente.innerHTML += `<option value="${c.id}">${c.nombre} (${c.cedula})</option>`;
+            tablaCli.innerHTML += `<tr>
+                <td>${c.id.toString().slice(-4)}</td>
+                <td><b>${c.nombre}</b></td>
+                <td>${c.cedula}</td>
+                <td>${c.telefono}</td>
+                <td>${c.direccion}</td>
+            </tr>`;
+
+            selectCli.innerHTML += `<option value="${c.id}">${c.nombre} (${c.cedula})</option>`;
         });
 
-        const tCobros = document.getElementById('tabla-cobros');
-        tCobros.innerHTML = '';
+        // Render Cobros
+        const tablaCobros = document.getElementById('tabla-cobros');
+        tablaCobros.innerHTML = '';
+        let activosCount = 0;
 
         db.prestamos.filter(p => p.estado === 'Activo').forEach(p => {
-            const cliente = db.clientes.find(c => c.id == p.clienteId);
-            tCobros.innerHTML += `
-                <tr>
-                    <td>${cliente ? cliente.nombre : 'N/A'}</td>
-                    <td>${p.id}</td>
-                    <td>RD$ ${p.valorCuota.toFixed(2)}</td>
-                    <td><button class="btn btn-sm btn-success" onclick="registrarPago('${p.id}')">COBRAR</button></td>
-                </tr>
-            `;
+            activosCount++;
+            const cliente = db.clientes.find(c => c.id === p.clienteId) || { nombre: 'Desconocido' };
+            const faltantes = p.cuotasTotales - p.cuotasPagadas;
+
+            tablaCobros.innerHTML += `<tr>
+                <td><b>${cliente.nombre}</b></td>
+                <td>RD$ ${p.valorCuota.toFixed(2)}</td>
+                <td>${faltantes} / ${p.cuotasTotales}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="registrarPago(${p.id})">Cobrar Cuota 💵</button>
+                </td>
+            </tr>`;
         });
 
-        let totalCobradoHoy = 0;
-        const hoy = new Date().toLocaleDateString();
-        db.pagos.forEach(p => {
-            if (p.fechaHora.includes(hoy)) totalCobradoHoy += p.montoPagado;
-        });
-
-        document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
-        document.getElementById('dash-activos').innerText = db.prestamos.filter(p => p.estado === 'Activo').length;
+        // Dashboard
+        document.getElementById('dash-activos').innerText = activosCount;
         
-        const ganancias = db.prestamos.reduce((sum, p) => sum + p.interesTotal, 0);
-        document.getElementById('dash-ganancias').innerText = `RD$ ${ganancias.toFixed(2)}`;
+        const totalCobradoHoy = db.pagos.reduce((acc, p) => acc + p.monto, 0);
+        document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
     }
 
-    actualizarVistas();
+    // Inicializar
+    render();
 </script>
 
 </body>
 </html>
-
