@@ -3,573 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E&S PRESTA FÁCIL PRO (Con Historial y Reportes)</title>
-    
-    <!-- SDKs de Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+    <title>PrestaFácil - Sistema de Gestiones</title>
     <style>
-        :root {
-            --primary: #0d6efd;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --card-bg: #ffffff;
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f1f5f9; color: var(--dark); padding-bottom: 50px; }
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            padding: 15px;
+        }
 
-        .header { background: var(--dark); color: white; padding: 20px; text-align: center; }
-        .header h2 { font-size: 1.25rem; margin-bottom: 5px; }
-        .header small { background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; }
+        header {
+            background-color: #1a252f;
+            color: #fff;
+            padding: 15px 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-        .nav { display: flex; gap: 8px; background: white; padding: 10px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; }
-        .nav button { padding: 10px 18px; border: none; background: #f1f5f9; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; color: #64748b; }
-        .nav button.active { background: var(--primary); color: white; }
+        header h1 {
+            font-size: 1.5rem;
+        }
 
-        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .card h3 { font-size: 1.1rem; color: var(--dark); margin-bottom: 15px; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-card { padding: 18px; border-radius: 10px; background: #f8fafc; border-left: 4px solid var(--primary); }
-        .stat-card.success { border-color: var(--success); }
-        .stat-card.warning { border-color: var(--warning); }
-        .stat-card h3 { font-size: 0.85rem; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-card p { font-size: 1.5rem; font-weight: bold; }
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
 
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #475569; }
-        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
 
-        .btn { padding: 11px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-block; width: 100%; text-align: center; }
-        .btn:hover { opacity: 0.95; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-warning { background: var(--warning); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-info { background: #0284c7; color: white; }
-        .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; margin-right: 4px; }
+        .form-group {
+            margin-bottom: 12px;
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        table th { background: #f8fafc; color: #64748b; font-weight: 600; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
 
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99; justify-content:center; align-items:center; }
-        .modal-body { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; max-height:85vh; overflow-y:auto; }
-        .ticket-box { background: #fff8f0; border: 1px dashed #d97706; padding: 15px; font-family: monospace; font-size: 0.85rem; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
-        @media print {
-            body * { visibility: hidden; }
-            #ticket-text, #ticket-text * { visibility: visible; }
-            #ticket-text { position: absolute; left: 0; top: 0; width: 100%; border: none; font-size: 12pt; }
+        .btn:hover {
+            background-color: #219150;
+        }
+
+        .client-list {
+            list-style: none;
+        }
+
+        .client-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .client-info h3 {
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .client-info p {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .badge {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge.paid {
+            background: #27ae60;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
         }
     </style>
+
+    <!-- Firebase SDK (Versión Compatible) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-<div class="header">
-    <h2>📲 E&S PRESTA FÁCIL PRO</h2>
-    <small>Empresa: <b>E&S Presta Fácil</b> | ☁️ Nube Sincronizada</small>
-</div>
+    <div class="container">
+        <header>
+            <h1>💼 PrestaFácil - Control de Préstamos</h1>
+        </header>
 
-<div class="nav">
-    <button class="tab-btn active" onclick="switchTab('dashboard')">Panel Principal</button>
-    <button class="tab-btn" onclick="switchTab('clientes')">Clientes</button>
-    <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
-    <button class="tab-btn" onclick="switchTab('cobros')">Ruta de Cobro</button>
-    <button class="tab-btn" onclick="switchTab('reportes')">Reporte Mensual</button>
-</div>
-
-<div class="container">
-
-    <!-- PANEL PRINCIPAL -->
-    <div id="dashboard" class="tab-content active">
-        <div class="grid-4 card">
-            <div class="stat-card success">
-                <h3>Cobrado Hoy</h3>
-                <p id="dash-cobrado">RD$ 0.00</p>
-            </div>
-            <div class="stat-card">
-                <h3>Préstamos Activos</h3>
-                <p id="dash-activos">0</p>
-            </div>
-            <div class="stat-card warning">
-                <h3>Atrasados</h3>
-                <p id="dash-atrasados">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Ganancia Estimada</h3>
-                <p id="dash-ganancias">RD$ 0.00</p>
-            </div>
-        </div>
-
-        <div class="card" style="margin-top:20px; text-align:center;">
-            <h3>⚙️ Opciones del Sistema</h3>
-            <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">Borra todos los datos almacenados en la nube.</p>
-            <button class="btn btn-danger" style="max-width:300px; margin:0 auto;" onclick="resetearSistema()">Limpiar y Reiniciar Datos 🔄</button>
-        </div>
-    </div>
-
-    <!-- CLIENTES -->
-    <div id="clientes" class="tab-content">
+        <!-- Formulario de Registro -->
         <div class="card">
-            <h3 id="form-cliente-titulo">➕ Registrar Nuevo Cliente</h3>
-            <form id="form-cliente" onsubmit="guardarCliente(event)">
-                <input type="hidden" id="cli-id">
+            <h2>Registrar Nuevo Cliente</h2>
+            <form id="loanForm">
                 <div class="form-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" id="cli-nombre" required placeholder="Ej: Juan Pérez">
+                    <label for="name">Nombre Completo</label>
+                    <input type="text" id="name" placeholder="Ej: Juan Pérez" required>
                 </div>
                 <div class="form-group">
-                    <label>Cédula</label>
-                    <input type="text" id="cli-cedula" required placeholder="001-0000000-0">
+                    <label for="cedula">Cédula / Documento</label>
+                    <input type="text" id="cedula" placeholder="001-0000000-0" required>
                 </div>
                 <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="text" id="cli-telefono" required placeholder="809-000-0000">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" placeholder="809-000-0000" required>
                 </div>
                 <div class="form-group">
-                    <label>Dirección / Sector</label>
-                    <input type="text" id="cli-direccion" required placeholder="Calle 12 #34, Sector">
+                    <label for="address">Dirección</label>
+                    <input type="text" id="address" placeholder="Calle 12 #34, Sector" required>
                 </div>
-                <button type="submit" id="btn-guardar-cliente" class="btn btn-success">Guardar Cliente</button>
-                <button type="button" id="btn-cancelar-cliente" class="btn" style="background:#cbd5e1; color:#1e293b; margin-top:8px; display:none;" onclick="cancelarEdicion()">Cancelar Edición</button>
+                <div class="form-group">
+                    <label for="amount">Monto Prestado ($)</label>
+                    <input type="number" id="amount" placeholder="5000" required>
+                </div>
+                <div class="form-group">
+                    <label for="interest">Interés (%)</label>
+                    <input type="number" id="interest" placeholder="10" value="10" required>
+                </div>
+                <button type="submit" class="btn">Guardar Cliente</button>
             </form>
         </div>
 
-        <div class="card" style="overflow-x: auto;">
-            <h3>Lista de Clientes</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Cédula</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-clientes"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- PRESTAMOS -->
-    <div id="prestamos" class="tab-content">
+        <!-- Lista de Clientes -->
         <div class="card">
-            <h3>💰 Generar Nuevo Préstamo</h3>
-            <form id="form-prestamo" onsubmit="guardarPrestamo(event)">
-                <div class="form-group">
-                    <label>Seleccionar Cliente</label>
-                    <select id="pres-cliente" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Monto del Préstamo (RD$)</label>
-                    <input type="number" id="pres-monto" required min="100" placeholder="10000">
-                </div>
-                <div class="form-group">
-                    <label>Tasa de Interés (%)</label>
-                    <input type="number" id="pres-interes" required value="20">
-                </div>
-                <div class="form-group">
-                    <label>Modalidad de Pago</label>
-                    <select id="pres-modalidad">
-                        <option value="Diario">Diario</option>
-                        <option value="Semanal">Semanal</option>
-                        <option value="Quincenal">Quincenal</option>
-                        <option value="Mensual">Mensual</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Número de Cuotas</label>
-                    <input type="number" id="pres-cuotas" required value="10">
-                </div>
-                <button type="submit" class="btn btn-success">Crear Préstamo</button>
-            </form>
+            <h2>Clientes Registrados</h2>
+            <ul id="clientList" class="client-list">
+                <p style="text-align: center; color: #888;">Cargando datos...</p>
+            </ul>
         </div>
     </div>
 
-    <!-- RUTA DE COBRO -->
-    <div id="cobros" class="tab-content">
-        <div class="card" style="overflow-x: auto;">
-            <h3>📋 Cobros Pendientes</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Cuota (RD$)</th>
-                        <th>Faltantes</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-cobros"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- REPORTE MENSUAL -->
-    <div id="reportes" class="tab-content">
-        <div class="card" style="overflow-x: auto;">
-            <h3>📊 Balance y Cobros por Mes (Histórico de 1 Año)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Mes / Año</th>
-                        <th>Total de Pagos</th>
-                        <th>Monto Recaudado (RD$)</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-reportes-mes"></tbody>
-            </table>
-        </div>
-    </div>
-
-</div>
-
-<!-- MODAL TICKET -->
-<div id="modal-ticket" class="modal">
-    <div class="modal-body">
-        <h3>✅ Cobro Registrado</h3>
-        <p style="font-size: 0.85rem; color:#64748b;">Recibo generado:</p>
-        <div id="ticket-text" class="ticket-box"></div>
-        <br>
-        <button id="btn-imprimir" class="btn btn-primary" style="margin-bottom:8px;" onclick="imprimirTicket()">Imprimir Recibo 🖨️</button>
-        <button id="btn-wa" class="btn btn-success" style="margin-bottom:8px;">Enviar por WhatsApp 📲</button>
-        <button class="btn" style="background:#cbd5e1; color:#1e293b;" onclick="cerrarModal()">Cerrar</button>
-    </div>
-</div>
-
-<!-- MODAL HISTORIAL DE CLIENTE -->
-<div id="modal-historial" class="modal">
-    <div class="modal-body">
-        <h3 id="historial-titulo">📜 Historial de Pagos</h3>
-        <div style="overflow-x:auto; margin-top:15px;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Monto</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-historial-cliente"></tbody>
-            </table>
-        </div>
-        <br>
-        <button class="btn" style="background:#cbd5e1; color:#1e293b;" onclick="cerrarModalHistorial()">Cerrar</button>
-    </div>
-</div>
-
-<script>
-    // ⚠️ REEMPLAZA ESTE BLOQUE CON TUS CLAVES DE FIREBASE
-    const firebaseConfig = {
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_PROYECTO.firebaseapp.com",
-        databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
-        projectId: "TU_PROYECTO",
-        storageBucket: "TU_PROYECTO.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456789:web:abc123def456"
-    };
-
-    // Inicializar Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    let db = { clientes: [], prestamos: [], pagos: [] };
-
-    // Escuchar cambios en tiempo real desde la nube
-    database.ref('presta_facil_db').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            db.clientes = data.clientes || [];
-            db.prestamos = data.prestamos || [];
-            db.pagos = data.pagos || [];
-        } else {
-            db = { clientes: [], prestamos: [], pagos: [] };
-        }
-        render();
-    });
-
-    function guardarDB() {
-        database.ref('presta_facil_db').set(db);
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.target.classList.add('active');
-    }
-
-    function guardarCliente(e) {
-        e.preventDefault();
-        const id = document.getElementById('cli-id').value;
-        const nombre = document.getElementById('cli-nombre').value;
-        const cedula = document.getElementById('cli-cedula').value;
-        const telefono = document.getElementById('cli-telefono').value;
-        const direccion = document.getElementById('cli-direccion').value;
-
-        if (id) {
-            const index = db.clientes.findIndex(c => c.id === parseInt(id));
-            if (index !== -1) {
-                db.clientes[index] = { id: parseInt(id), nombre, cedula, telefono, direccion };
-            }
-        } else {
-            const cliente = { id: Date.now(), nombre, cedula, telefono, direccion };
-            db.clientes.push(cliente);
-        }
-
-        cancelarEdicion();
-        guardarDB();
-    }
-
-    function editarCliente(id) {
-        const cliente = db.clientes.find(c => c.id === id);
-        if (cliente) {
-            document.getElementById('cli-id').value = cliente.id;
-            document.getElementById('cli-nombre').value = cliente.nombre;
-            document.getElementById('cli-cedula').value = cliente.cedula;
-            document.getElementById('cli-telefono').value = cliente.telefono;
-            document.getElementById('cli-direccion').value = cliente.direccion;
-
-            document.getElementById('form-cliente-titulo').innerText = '✏️ Editar Cliente';
-            document.getElementById('btn-guardar-cliente').innerText = 'Guardar Cambios';
-            document.getElementById('btn-guardar-cliente').className = 'btn btn-warning';
-            document.getElementById('btn-cancelar-cliente').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    function verHistorialCliente(clienteId) {
-        const cliente = db.clientes.find(c => c.id === clienteId);
-        const prestamosCliente = db.prestamos.filter(p => p.clienteId === clienteId).map(p => p.id);
-        const pagosCliente = db.pagos.filter(p => prestamosCliente.includes(p.prestamoId));
-
-        document.getElementById('historial-titulo').innerText = `📜 Historial: ${cliente.nombre}`;
-        const tabla = document.getElementById('tabla-historial-cliente');
-        tabla.innerHTML = '';
-
-        if (pagosCliente.length === 0) {
-            tabla.innerHTML = '<tr><td colspan="2">No hay pagos registrados para este cliente.</td></tr>';
-        } else {
-            pagosCliente.forEach(p => {
-                tabla.innerHTML += `<tr>
-                    <td>${p.fecha}</td>
-                    <td><b>RD$ ${p.monto.toFixed(2)}</b></td>
-                </tr>`;
-            });
-        }
-
-        document.getElementById('modal-historial').style.display = 'flex';
-    }
-
-    function cancelarEdicion() {
-        document.getElementById('cli-id').value = '';
-        document.getElementById('form-cliente').reset();
-        document.getElementById('form-cliente-titulo').innerText = '➕ Registrar Nuevo Cliente';
-        document.getElementById('btn-guardar-cliente').innerText = 'Guardar Cliente';
-        document.getElementById('btn-guardar-cliente').className = 'btn btn-success';
-        document.getElementById('btn-cancelar-cliente').style.display = 'none';
-    }
-
-    function eliminarCliente(id) {
-        if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esto también eliminará sus préstamos.')) {
-            db.clientes = db.clientes.filter(c => c.id !== id);
-            db.prestamos = db.prestamos.filter(p => p.clienteId !== id);
-            guardarDB();
-        }
-    }
-
-    function guardarPrestamo(e) {
-        e.preventDefault();
-        const clienteId = document.getElementById('pres-cliente').value;
-        const monto = parseFloat(document.getElementById('pres-monto').value);
-        const interes = parseFloat(document.getElementById('pres-interes').value);
-        const cuotas = parseInt(document.getElementById('pres-cuotas').value);
-        const modalidad = document.getElementById('pres-modalidad').value;
-
-        const totalPagar = monto + (monto * (interes / 100));
-        const valorCuota = totalPagar / cuotas;
-
-        const prestamo = {
-            id: Date.now(),
-            clienteId: parseInt(clienteId),
-            monto: monto,
-            totalPagar: totalPagar,
-            valorCuota: valorCuota,
-            cuotasTotales: cuotas,
-            cuotasPagadas: 0,
-            modalidad: modalidad,
-            estado: 'Activo'
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBuu3o8cpHPtk_hhaQhhaq0", 
+            authDomain: "prestafacil-572fc.firebaseapp.com",
+            databaseURL: "https://prestafacil-572fc-default-rtdb.firebaseio.com",
+            projectId: "prestafacil-572fc",
+            storageBucket: "prestafacil-572fc.firebasestorage.app",
+            messagingSenderId: "156821899098",
+            appId: "1:156821899098:web:cf8a9a61c4",
+            measurementId: "G-7Q9S64FG4T"
         };
 
-        db.prestamos.push(prestamo);
-        guardarDB();
-        document.getElementById('form-prestamo').reset();
-    }
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const clientsRef = database.ref('clientes');
 
-    function registrarPago(prestamoId) {
-        const prestamo = db.prestamos.find(p => p.id === prestamoId);
-        const cliente = db.clientes.find(c => c.id === prestamo.clienteId);
+        // Formulario y Elementos DOM
+        const loanForm = document.getElementById('loanForm');
+        const clientList = document.getElementById('clientList');
 
-        if(prestamo.cuotasPagadas < prestamo.cuotasTotales) {
-            prestamo.cuotasPagadas += 1;
-            if(prestamo.cuotasPagadas === prestamo.cuotasTotales) {
-                prestamo.estado = 'Finalizado';
-            }
+        // Guardar cliente en Firebase Realtime Database
+        loanForm.addEventListener('submit', (e) => {
+            e.preventDefault();
 
-            const ahora = new Date();
-            const fechaStr = ahora.toLocaleDateString(); // "D/M/AAAA"
-            const mesAnioStr = `${ahora.getMonth() + 1}/${ahora.getFullYear()}`; // "M/AAAA"
+            const name = document.getElementById('name').value;
+            const cedula = document.getElementById('cedula').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const interest = parseFloat(document.getElementById('interest').value);
+            const totalToPay = amount + (amount * (interest / 100));
 
-            const pago = {
-                id: Date.now(),
-                prestamoId: prestamo.id,
-                monto: prestamo.valorCuota,
-                fecha: fechaStr,
-                mesAnio: mesAnioStr,
-                timestamp: ahora.getTime()
-            };
-            db.pagos.push(pago);
-            guardarDB();
-
-            mostrarTicket(cliente, prestamo, pago);
-        }
-    }
-
-    function mostrarTicket(cliente, prestamo, pago) {
-        const textoTicket = 
-`==========================
-   E&S PRESTA FÁCIL PRO   
-  RECIBO DE PAGO OFICIAL  
-==========================
-Fecha: ${pago.fecha}
-Cliente: ${cliente.nombre}
-Cédula: ${cliente.cedula}
---------------------------
-Cuota Pagada: RD$ ${prestamo.valorCuota.toFixed(2)}
-Modalidad: ${prestamo.modalidad}
-Progreso: ${prestamo.cuotasPagadas} de ${prestamo.cuotasTotales} cuotas
-Saldo Restante: RD$ ${(prestamo.totalPagar - (prestamo.cuotasPagadas * prestamo.valorCuota)).toFixed(2)}
---------------------------
-¡Gracias por mantener su
-crédito al día con nosotros!`;
-
-        document.getElementById('ticket-text').innerText = textoTicket;
-        
-        const btnWa = document.getElementById('btn-wa');
-        btnWa.onclick = function() {
-            const tel = cliente.telefono.replace(/[^0-9]/g, '');
-            const url = `https://api.whatsapp.com/send?phone=1${tel}&text=${encodeURIComponent(textoTicket)}`;
-            window.open(url, '_blank');
-        };
-
-        document.getElementById('modal-ticket').style.display = 'flex';
-    }
-
-    function imprimirTicket() { window.print(); }
-    function cerrarModal() { document.getElementById('modal-ticket').style.display = 'none'; }
-    function cerrarModalHistorial() { document.getElementById('modal-historial').style.display = 'none'; }
-
-    function resetearSistema() {
-        if (confirm('¿Quieres borrar todo el historial y reiniciar los montos a cero en la nube?')) {
-            db = { clientes: [], prestamos: [], pagos: [] };
-            guardarDB();
-        }
-    }
-
-    function render() {
-        // Clientes
-        const tablaCli = document.getElementById('tabla-clientes');
-        const selectCli = document.getElementById('pres-cliente');
-        tablaCli.innerHTML = '';
-        selectCli.innerHTML = '<option value="">Seleccione un cliente...</option>';
-
-        db.clientes.forEach(c => {
-            tablaCli.innerHTML += `<tr>
-                <td>${c.id.toString().slice(-4)}</td>
-                <td><b>${c.nombre}</b></td>
-                <td>${c.cedula}</td>
-                <td>${c.telefono}</td>
-                <td>${c.direccion}</td>
-                <td>
-                    <button class="btn btn-info btn-sm" onclick="verHistorialCliente(${c.id})">📜</button>
-                    <button class="btn btn-warning btn-sm" onclick="editarCliente(${c.id})">✏️</button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.id})">🗑️</button>
-                </td>
-            </tr>`;
-
-            selectCli.innerHTML += `<option value="${c.id}">${c.nombre} (${c.cedula})</option>`;
-        });
-
-        // Cobros
-        const tablaCobros = document.getElementById('tabla-cobros');
-        tablaCobros.innerHTML = '';
-        let activosCount = 0;
-
-        db.prestamos.filter(p => p.estado === 'Activo').forEach(p => {
-            activosCount++;
-            const cliente = db.clientes.find(c => c.id === p.clienteId) || { nombre: 'Desconocido' };
-            const faltantes = p.cuotasTotales - p.cuotasPagadas;
-
-            tablaCobros.innerHTML += `<tr>
-                <td><b>${cliente.nombre}</b></td>
-                <td>RD$ ${p.valorCuota.toFixed(2)}</td>
-                <td>${faltantes} / ${p.cuotasTotales}</td>
-                <td>
-                    <button class="btn btn-success btn-sm" onclick="registrarPago(${p.id})">Cobrar Cuota 💵</button>
-                </td>
-            </tr>`;
-        });
-
-        document.getElementById('dash-activos').innerText = activosCount;
-        
-        // Cobrado HOY (Reinicio automático por fecha)
-        const hoyStr = new Date().toLocaleDateString();
-        const totalCobradoHoy = db.pagos
-            .filter(p => p.fecha === hoyStr)
-            .reduce((acc, p) => acc + p.monto, 0);
-
-        document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
-
-        // Reporte Mensual (Último año)
-        const tablaReportes = document.getElementById('tabla-reportes-mes');
-        tablaReportes.innerHTML = '';
-
-        const agruparPorMes = {};
-        db.pagos.forEach(pago => {
-            const mesAnio = pago.mesAnio || "Anteriores";
-            if (!agruparPorMes[mesAnio]) {
-                agruparPorMes[mesAnio] = { cantidad: 0, total: 0 };
-            }
-            agruparPorMes[mesAnio].cantidad += 1;
-            agruparPorMes[mesAnio].total += pago.monto;
-        });
-
-        const mesesKeys = Object.keys(agruparPorMes);
-        if (mesesKeys.length === 0) {
-            tablaReportes.innerHTML = '<tr><td colspan="3">Aún no hay cobros registrados.</td></tr>';
-        } else {
-            mesesKeys.forEach(m => {
-                tablaReportes.innerHTML += `<tr>
-                    <td><b>Mes ${m}</b></td>
-                    <td>${agruparPorMes[m].cantidad} cobros</td>
-                    <td><b>RD$ ${agruparPorMes[m].total.toFixed(2)}</b></td>
-                </tr>`;
+            const newClientRef = clientsRef.push();
+            newClientRef.set({
+                name: name,
+                cedula: cedula,
+                phone: phone,
+                address: address,
+                amount: amount,
+                interest: interest,
+                totalToPay: totalToPay,
+                status: 'Pendiente',
+                date: new Date().toLocaleDateString()
+            }, (error) => {
+                if (error) {
+                    alert('Error al guardar datos: ' + error.message);
+                } else {
+                    loanForm.reset();
+                }
             });
-        }
-    }
-</script>
+        });
 
+        // Escuchar datos en tiempo real desde Firebase
+        clientsRef.on('value', (snapshot) => {
+            clientList.innerHTML = '';
+            const data = snapshot.val();
+
+            if (!data) {
+                clientList.innerHTML = '<p style="text-align: center; color: #888;">No hay clientes registrados aún.</p>';
+                return;
+            }
+
+            for (let id in data) {
+                const client = data[id];
+                const li = document.createElement('li');
+                li.className = 'client-item';
+                li.innerHTML = `
+                    <div class="client-info">
+                        <h3>${client.name}</h3>
+                        <p><strong>Cédula:</strong> ${client.cedula} | <strong>Tel:</strong> ${client.phone}</p>
+                        <p><strong>Dirección:</strong> ${client.address}</p>
+                        <p><strong>Monto:</strong> $${client.amount} | <strong>Total a pagar:</strong> $${client.totalToPay}</p>
+                        <p><small>Fecha: ${client.date}</small></p>
+                    </div>
+                    <div>
+                        <span class="badge ${client.status === 'Pagado' ? 'paid' : ''}">${client.status}</span>
+                        <button class="btn-delete" onclick="deleteClient('${id}')" style="margin-left: 8px;">Eliminar</button>
+                    </div>
+                `;
+                clientList.appendChild(li);
+            }
+        });
+
+        // Función para eliminar cliente
+        window.deleteClient = function(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
+                clientsRef.child(id).remove();
+            }
+        };
+    </script>
 </body>
 </html>
