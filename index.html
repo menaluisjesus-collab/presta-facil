@@ -8,9 +8,9 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f4f6f9; color: #333; padding: 15px; }
         header { background-color: #1a252f; color: #fff; padding: 15px 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { padding: 10px 20px; border: none; background: #e0e6ed; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
+        .container { max-width: 950px; margin: 0 auto; }
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 15px; border: none; background: #e0e6ed; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; min-width: 120px; text-align: center; }
         .tab-btn.active { background: #2563eb; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -26,6 +26,10 @@
         th { background-color: #f8f9fa; }
         .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }
+        .kpi-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        .kpi-card .amount { font-size: 1.4rem; font-weight: bold; color: #1e293b; }
     </style>
 
     <!-- Firebase SDK Compatibles -->
@@ -37,7 +41,7 @@
     <div class="container">
         <header>
             <h1>📲 E&S PRESTA FÁCIL PRO</h1>
-            <p><small>Empresa: E&S Presta Fácil</small></p>
+            <p><small>Empresa: E&S Presta Fácil (Sincronizado en Tiempo Real)</small></p>
         </header>
 
         <!-- Navegación de Pestañas -->
@@ -45,6 +49,7 @@
             <button class="tab-btn active" onclick="switchTab('clientes')">Clientes</button>
             <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
             <button class="tab-btn" onclick="switchTab('ruta')">Ruta de Cobro</button>
+            <button class="tab-btn" onclick="switchTab('reportes')">Balances y Reportes</button>
         </div>
 
         <!-- Pestaña Clientes -->
@@ -123,6 +128,45 @@
                 </table>
             </div>
         </div>
+
+        <!-- Pestaña Balances y Reportes -->
+        <div id="tab-reportes" class="tab-content card">
+            <h2>📊 Resumen Financiero y Balances</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <h3>Cobrado Hoy</h3>
+                    <div class="amount" id="kpiToday">RD$ 0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <h3>Cobrado esta Semana</h3>
+                    <div class="amount" id="kpiWeek">RD$ 0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <h3>Balance del Mes</h3>
+                    <div class="amount" id="kpiMonth">RD$ 0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <h3>Balance del Año</h3>
+                    <div class="amount" id="kpiYear">RD$ 0.00</div>
+                </div>
+            </div>
+
+            <h2 style="margin-top:20px;">📜 Historial General de Pagos</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Monto Cobrado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="3" style="text-align:center;">No hay registros de cobro aún.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -141,24 +185,21 @@
         const database = firebase.database();
         const clientsRef = database.ref('clientes');
         const loansRef = database.ref('prestamos');
+        const paymentsRef = database.ref('pagos');
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            if(tabName === 'clientes') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('tab-clientes').classList.add('active');
-            } else if(tabName === 'prestamos') {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('tab-prestamos').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[2].classList.add('active');
-                document.getElementById('tab-ruta').classList.add('active');
+            const tabs = ['clientes', 'prestamos', 'ruta', 'reportes'];
+            const idx = tabs.indexOf(tabName);
+            if(idx !== -1) {
+                document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
             }
         }
 
-        // Guardar Cliente en Firebase
+        // Guardar Cliente
         document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('clientName').value;
@@ -176,7 +217,7 @@
             });
         });
 
-        // Cargar Lista de Clientes en el formulario de Préstamos
+        // Cargar Lista de Clientes en Préstamos
         clientsRef.on('value', (snapshot) => {
             const select = document.getElementById('loanClientSelect');
             select.innerHTML = '<option value="">Seleccione un cliente</option>';
@@ -188,7 +229,7 @@
             }
         });
 
-        // Crear Préstamo en Firebase
+        // Crear Préstamo
         document.getElementById('loanForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const client = document.getElementById('loanClientSelect').value;
@@ -212,7 +253,7 @@
             });
         });
 
-        // Leer Ruta de Cobro desde Firebase
+        // Leer Ruta de Cobro
         loansRef.on('value', (snapshot) => {
             const tbody = document.getElementById('routeTableBody');
             tbody.innerHTML = '';
@@ -230,7 +271,7 @@
                         <td>RD$ ${item.installment.toFixed(2)}</td>
                         <td>${item.faltantes} / ${item.totalCuotas}</td>
                         <td>
-                            <button class="btn-action" onclick="cobrar('${id}', ${item.faltantes})">Cobrar Cuota 💵</button>
+                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', ${item.installment}, ${item.faltantes})">Cobrar Cuota 💵</button>
                             <button class="btn-delete" onclick="eliminar('${id}')" style="margin-left: 5px;">X</button>
                         </td>
                     </tr>
@@ -238,21 +279,97 @@
             }
         });
 
-        // Descontar una cuota
-        window.cobrar = function(id, faltantes) {
-            if(faltantes > 0) {
-                loansRef.child(id).update({ faltantes: faltantes - 1 });
-            } else {
+        // Registrar Cobro y guardar en Historial / Balances
+        window.cobrar = function(loanId, clientName, amount, faltantes) {
+            if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
+                return;
             }
+
+            const now = new Date();
+            const paymentData = {
+                loanId: loanId,
+                client: clientName,
+                amount: amount,
+                timestamp: now.getTime(),
+                dateStr: now.toLocaleDateString('es-DO'),
+                year: now.getFullYear(),
+                month: now.getMonth() + 1
+            };
+
+            // 1. Guardar pago en el historial global
+            paymentsRef.push().set(paymentData, (error) => {
+                if(!error) {
+                    // 2. Descontar la cuota
+                    loansRef.child(loanId).update({ faltantes: faltantes - 1 });
+                } else {
+                    alert('Error al registrar cobro: ' + error.message);
+                }
+            });
         };
 
-        // Eliminar registro
+        // Eliminar Préstamo
         window.eliminar = function(id) {
             if(confirm('¿Deseas eliminar este registro de la nube?')) {
                 loansRef.child(id).remove();
             }
         };
+
+        // Escuchar Pagos para actualizar Balances y Reportes (Diarios, Semanales, Mensuales, Anuales)
+        paymentsRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            let totalToday = 0;
+            let totalWeek = 0;
+            let totalMonth = 0;
+            let totalYear = 0;
+
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('es-DO');
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            
+            // Calculo inicio de semana (hace 7 días)
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(now.getDate() - 7);
+
+            if(!data) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay registros de cobro aún.</td></tr>';
+            } else {
+                let items = [];
+                for(let id in data) {
+                    items.push(data[id]);
+                }
+                items.reverse(); // Mostrar los más recientes primero
+
+                items.forEach(pago => {
+                    const pDate = new Date(pago.timestamp);
+
+                    // Acumuladores de tiempo
+                    if(pago.dateStr === todayStr) totalToday += pago.amount;
+                    if(pDate >= oneWeekAgo) totalWeek += pago.amount;
+                    if(pago.year === currentYear && pago.month === currentMonth) totalMonth += pago.amount;
+                    if(pago.year === currentYear) totalYear += pago.amount;
+
+                    // Fila del historial
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${pago.dateStr}</td>
+                            <td><strong>${pago.client}</strong></td>
+                            <td>RD$ ${pago.amount.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Actualizar KPIs en pantalla
+            document.getElementById('kpiToday').innerText = `RD$ ${totalToday.toFixed(2)}`;
+            document.getElementById('kpiWeek').innerText = `RD$ ${totalWeek.toFixed(2)}`;
+            document.getElementById('kpiMonth').innerText = `RD$ ${totalMonth.toFixed(2)}`;
+            document.getElementById('kpiYear').innerText = `RD$ ${totalYear.toFixed(2)}`;
+        });
     </script>
 </body>
 </html>
