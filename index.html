@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E&S PRESTA FÁCIL PRO</title>
+    <title>E&S PRESTA FÁCIL PRO (Con Historial y Reportes)</title>
+    
+    <!-- SDKs de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
             --primary: #0d6efd;
@@ -48,6 +53,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-warning { background: var(--warning); color: white; }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-info { background: #0284c7; color: white; }
         .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; margin-right: 4px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -58,10 +64,9 @@
         .tab-content.active { display: block; }
 
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99; justify-content:center; align-items:center; }
-        .modal-body { background:white; padding:20px; border-radius:12px; max-width:400px; width:90%; }
+        .modal-body { background:white; padding:20px; border-radius:12px; max-width:500px; width:90%; max-height:85vh; overflow-y:auto; }
         .ticket-box { background: #fff8f0; border: 1px dashed #d97706; padding: 15px; font-family: monospace; font-size: 0.85rem; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
 
-        /* Estilo para impresión limpia */
         @media print {
             body * { visibility: hidden; }
             #ticket-text, #ticket-text * { visibility: visible; }
@@ -73,7 +78,7 @@
 
 <div class="header">
     <h2>📲 E&S PRESTA FÁCIL PRO</h2>
-    <small>Empresa: <b>E&S Presta Fácil</b></small>
+    <small>Empresa: <b>E&S Presta Fácil</b> | ☁️ Nube Sincronizada</small>
 </div>
 
 <div class="nav">
@@ -81,6 +86,7 @@
     <button class="tab-btn" onclick="switchTab('clientes')">Clientes</button>
     <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
     <button class="tab-btn" onclick="switchTab('cobros')">Ruta de Cobro</button>
+    <button class="tab-btn" onclick="switchTab('reportes')">Reporte Mensual</button>
 </div>
 
 <div class="container">
@@ -104,6 +110,12 @@
                 <h3>Ganancia Estimada</h3>
                 <p id="dash-ganancias">RD$ 0.00</p>
             </div>
+        </div>
+
+        <div class="card" style="margin-top:20px; text-align:center;">
+            <h3>⚙️ Opciones del Sistema</h3>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">Borra todos los datos almacenados en la nube.</p>
+            <button class="btn btn-danger" style="max-width:300px; margin:0 auto;" onclick="resetearSistema()">Limpiar y Reiniciar Datos 🔄</button>
         </div>
     </div>
 
@@ -205,9 +217,26 @@
         </div>
     </div>
 
+    <!-- REPORTE MENSUAL -->
+    <div id="reportes" class="tab-content">
+        <div class="card" style="overflow-x: auto;">
+            <h3>📊 Balance y Cobros por Mes (Histórico de 1 Año)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mes / Año</th>
+                        <th>Total de Pagos</th>
+                        <th>Monto Recaudado (RD$)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-reportes-mes"></tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
-<!-- MODAL TICKET WHATSAPP E IMPRESIÓN -->
+<!-- MODAL TICKET -->
 <div id="modal-ticket" class="modal">
     <div class="modal-body">
         <h3>✅ Cobro Registrado</h3>
@@ -220,18 +249,59 @@
     </div>
 </div>
 
+<!-- MODAL HISTORIAL DE CLIENTE -->
+<div id="modal-historial" class="modal">
+    <div class="modal-body">
+        <h3 id="historial-titulo">📜 Historial de Pagos</h3>
+        <div style="overflow-x:auto; margin-top:15px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-historial-cliente"></tbody>
+            </table>
+        </div>
+        <br>
+        <button class="btn" style="background:#cbd5e1; color:#1e293b;" onclick="cerrarModalHistorial()">Cerrar</button>
+    </div>
+</div>
+
 <script>
-    let db = {
-        clientes: JSON.parse(localStorage.getItem('es_clientes')) || [],
-        prestamos: JSON.parse(localStorage.getItem('es_prestamos')) || [],
-        pagos: JSON.parse(localStorage.getItem('es_pagos')) || []
+    // ⚠️ REEMPLAZA ESTE BLOQUE CON TUS CLAVES DE FIREBASE
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_PROYECTO.firebaseapp.com",
+        databaseURL: "https://TU_PROYECTO-default-rtdb.firebaseio.com",
+        projectId: "TU_PROYECTO",
+        storageBucket: "TU_PROYECTO.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abc123def456"
     };
 
-    function guardarDB() {
-        localStorage.setItem('es_clientes', JSON.stringify(db.clientes));
-        localStorage.setItem('es_prestamos', JSON.stringify(db.prestamos));
-        localStorage.setItem('es_pagos', JSON.stringify(db.pagos));
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let db = { clientes: [], prestamos: [], pagos: [] };
+
+    // Escuchar cambios en tiempo real desde la nube
+    database.ref('presta_facil_db').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            db.clientes = data.clientes || [];
+            db.prestamos = data.prestamos || [];
+            db.pagos = data.pagos || [];
+        } else {
+            db = { clientes: [], prestamos: [], pagos: [] };
+        }
         render();
+    });
+
+    function guardarDB() {
+        database.ref('presta_facil_db').set(db);
     }
 
     function switchTab(tabId) {
@@ -253,12 +323,10 @@
             const index = db.clientes.findIndex(c => c.id === parseInt(id));
             if (index !== -1) {
                 db.clientes[index] = { id: parseInt(id), nombre, cedula, telefono, direccion };
-                alert('Cliente actualizado con éxito.');
             }
         } else {
             const cliente = { id: Date.now(), nombre, cedula, telefono, direccion };
             db.clientes.push(cliente);
-            alert('Cliente registrado con éxito.');
         }
 
         cancelarEdicion();
@@ -282,6 +350,29 @@
         }
     }
 
+    function verHistorialCliente(clienteId) {
+        const cliente = db.clientes.find(c => c.id === clienteId);
+        const prestamosCliente = db.prestamos.filter(p => p.clienteId === clienteId).map(p => p.id);
+        const pagosCliente = db.pagos.filter(p => prestamosCliente.includes(p.prestamoId));
+
+        document.getElementById('historial-titulo').innerText = `📜 Historial: ${cliente.nombre}`;
+        const tabla = document.getElementById('tabla-historial-cliente');
+        tabla.innerHTML = '';
+
+        if (pagosCliente.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="2">No hay pagos registrados para este cliente.</td></tr>';
+        } else {
+            pagosCliente.forEach(p => {
+                tabla.innerHTML += `<tr>
+                    <td>${p.fecha}</td>
+                    <td><b>RD$ ${p.monto.toFixed(2)}</b></td>
+                </tr>`;
+            });
+        }
+
+        document.getElementById('modal-historial').style.display = 'flex';
+    }
+
     function cancelarEdicion() {
         document.getElementById('cli-id').value = '';
         document.getElementById('form-cliente').reset();
@@ -296,7 +387,6 @@
             db.clientes = db.clientes.filter(c => c.id !== id);
             db.prestamos = db.prestamos.filter(p => p.clienteId !== id);
             guardarDB();
-            alert('Cliente eliminado correctamente.');
         }
     }
 
@@ -326,7 +416,6 @@
         db.prestamos.push(prestamo);
         guardarDB();
         document.getElementById('form-prestamo').reset();
-        alert('Préstamo registrado exitosamente.');
     }
 
     function registrarPago(prestamoId) {
@@ -339,11 +428,17 @@
                 prestamo.estado = 'Finalizado';
             }
 
+            const ahora = new Date();
+            const fechaStr = ahora.toLocaleDateString(); // "D/M/AAAA"
+            const mesAnioStr = `${ahora.getMonth() + 1}/${ahora.getFullYear()}`; // "M/AAAA"
+
             const pago = {
                 id: Date.now(),
                 prestamoId: prestamo.id,
                 monto: prestamo.valorCuota,
-                fecha: new Date().toLocaleDateString()
+                fecha: fechaStr,
+                mesAnio: mesAnioStr,
+                timestamp: ahora.getTime()
             };
             db.pagos.push(pago);
             guardarDB();
@@ -382,15 +477,19 @@ crédito al día con nosotros!`;
         document.getElementById('modal-ticket').style.display = 'flex';
     }
 
-    function imprimirTicket() {
-        window.print();
-    }
+    function imprimirTicket() { window.print(); }
+    function cerrarModal() { document.getElementById('modal-ticket').style.display = 'none'; }
+    function cerrarModalHistorial() { document.getElementById('modal-historial').style.display = 'none'; }
 
-    function cerrarModal() {
-        document.getElementById('modal-ticket').style.display = 'none';
+    function resetearSistema() {
+        if (confirm('¿Quieres borrar todo el historial y reiniciar los montos a cero en la nube?')) {
+            db = { clientes: [], prestamos: [], pagos: [] };
+            guardarDB();
+        }
     }
 
     function render() {
+        // Clientes
         const tablaCli = document.getElementById('tabla-clientes');
         const selectCli = document.getElementById('pres-cliente');
         tablaCli.innerHTML = '';
@@ -404,6 +503,7 @@ crédito al día con nosotros!`;
                 <td>${c.telefono}</td>
                 <td>${c.direccion}</td>
                 <td>
+                    <button class="btn btn-info btn-sm" onclick="verHistorialCliente(${c.id})">📜</button>
                     <button class="btn btn-warning btn-sm" onclick="editarCliente(${c.id})">✏️</button>
                     <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.id})">🗑️</button>
                 </td>
@@ -412,6 +512,7 @@ crédito al día con nosotros!`;
             selectCli.innerHTML += `<option value="${c.id}">${c.nombre} (${c.cedula})</option>`;
         });
 
+        // Cobros
         const tablaCobros = document.getElementById('tabla-cobros');
         tablaCobros.innerHTML = '';
         let activosCount = 0;
@@ -433,11 +534,41 @@ crédito al día con nosotros!`;
 
         document.getElementById('dash-activos').innerText = activosCount;
         
-        const totalCobradoHoy = db.pagos.reduce((acc, p) => acc + p.monto, 0);
-        document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
-    }
+        // Cobrado HOY (Reinicio automático por fecha)
+        const hoyStr = new Date().toLocaleDateString();
+        const totalCobradoHoy = db.pagos
+            .filter(p => p.fecha === hoyStr)
+            .reduce((acc, p) => acc + p.monto, 0);
 
-    render();
+        document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
+
+        // Reporte Mensual (Último año)
+        const tablaReportes = document.getElementById('tabla-reportes-mes');
+        tablaReportes.innerHTML = '';
+
+        const agruparPorMes = {};
+        db.pagos.forEach(pago => {
+            const mesAnio = pago.mesAnio || "Anteriores";
+            if (!agruparPorMes[mesAnio]) {
+                agruparPorMes[mesAnio] = { cantidad: 0, total: 0 };
+            }
+            agruparPorMes[mesAnio].cantidad += 1;
+            agruparPorMes[mesAnio].total += pago.monto;
+        });
+
+        const mesesKeys = Object.keys(agruparPorMes);
+        if (mesesKeys.length === 0) {
+            tablaReportes.innerHTML = '<tr><td colspan="3">Aún no hay cobros registrados.</td></tr>';
+        } else {
+            mesesKeys.forEach(m => {
+                tablaReportes.innerHTML += `<tr>
+                    <td><b>Mes ${m}</b></td>
+                    <td>${agruparPorMes[m].cantidad} cobros</td>
+                    <td><b>RD$ ${agruparPorMes[m].total.toFixed(2)}</b></td>
+                </tr>`;
+            });
+        }
+    }
 </script>
 
 </body>
