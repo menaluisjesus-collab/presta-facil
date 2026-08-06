@@ -24,12 +24,22 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         th { background-color: #f8f9fa; }
-        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
+        .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; text-decoration: none; display: inline-block; }
+        .btn-print { background-color: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
+        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }
         .kpi-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
         .kpi-card .amount { font-size: 1.4rem; font-weight: bold; color: #1e293b; }
+        
+        /* Estilo para impresión de recibos */
+        @media print {
+            body * { visibility: hidden; }
+            #printable-ticket, #printable-ticket * { visibility: visible; }
+            #printable-ticket { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-size: 16px; background: white; }
+        }
+        #printable-ticket { display: none; }
     </style>
 
     <!-- Firebase SDK Compatibles -->
@@ -41,7 +51,7 @@
     <div class="container">
         <header>
             <h1>📲 E&S PRESTA FÁCIL PRO</h1>
-            <p><small>Empresa: E&S Presta Fácil (Sincronizado en Tiempo Real)</small></p>
+            <p><small>Sistema de Control y Cobros en Tiempo Real</small></p>
         </header>
 
         <!-- Navegación de Pestañas -->
@@ -65,8 +75,8 @@
                     <input type="text" id="clientCedula" placeholder="001-0000000-0" required>
                 </div>
                 <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="tel" id="clientPhone" placeholder="809-000-0000" required>
+                    <label>Teléfono (Para WhatsApp)</label>
+                    <input type="tel" id="clientPhone" placeholder="18090000000" required>
                 </div>
                 <button type="submit" class="btn">Guardar Cliente</button>
             </form>
@@ -93,7 +103,6 @@
                         <option value="Semanal">Semanal</option>
                         <option value="Quincenal">Quincenal</option>
                         <option value="Mensual">Mensual</option>
-                        <option value="Anual">Anual</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -110,20 +119,19 @@
 
         <!-- Pestaña Ruta de Cobro -->
         <div id="tab-ruta" class="tab-content card">
-            <h2>📋 Cobros Pendientes</h2>
+            <h2>📋 Cobros Pendientes y Ruta</h2>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
                         <tr>
                             <th>Cliente</th>
-                            <th>Frecuencia</th>
                             <th>Cuota (RD$)</th>
                             <th>Faltantes</th>
-                            <th>Acción</th>
+                            <th>Acciones y Opciones</th>
                         </tr>
                     </thead>
                     <tbody id="routeTableBody">
-                        <tr><td colspan="5" style="text-align:center;">Cargando cobros en la nube...</td></tr>
+                        <tr><td colspan="4" style="text-align:center;">Cargando ruta de cobro...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -169,6 +177,19 @@
         </div>
     </div>
 
+    <!-- Contenedor oculto para impresión física de recibos -->
+    <div id="printable-ticket">
+        <h2 style="text-align:center;">E&S PRESTA FÁCIL</h2>
+        <p style="text-align:center;">Recibo de Pago de Préstamo</p>
+        <hr style="margin: 10px 0;">
+        <p><strong>Fecha:</strong> <span id="print-date"></span></p>
+        <p><strong>Cliente:</strong> <span id="print-client"></span></p>
+        <p><strong>Monto Abonado:</strong> RD$ <span id="print-amount"></span></p>
+        <p><strong>Cuotas Restantes:</strong> <span id="print-faltantes"></span></p>
+        <hr style="margin: 10px 0;">
+        <p style="text-align:center;"><small>¡Gracias por su pago puntual!</small></p>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBuu3o8cpHPTk_hhaQhhaqOTr44XHoqu3U",
@@ -199,7 +220,7 @@
             }
         }
 
-        // Guardar Cliente
+        // Guardar Cliente con Teléfono
         document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('clientName').value;
@@ -217,29 +238,33 @@
             });
         });
 
-        // Cargar Lista de Clientes en Préstamos
+        // Cargar Lista de Clientes en Préstamos con su teléfono guardado
         clientsRef.on('value', (snapshot) => {
             const select = document.getElementById('loanClientSelect');
             select.innerHTML = '<option value="">Seleccione un cliente</option>';
             const data = snapshot.val();
             if(data) {
                 for(let id in data) {
-                    select.innerHTML += `<option value="${data[id].name}">${data[id].name}</option>`;
+                    select.innerHTML += `<option value="${data[id].name}" data-phone="${data[id].phone || ''}">${data[id].name}</option>`;
                 }
             }
         });
 
-        // Crear Préstamo
+        // Crear Préstamo vinculando el teléfono del cliente automáticamente
         document.getElementById('loanForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const client = document.getElementById('loanClientSelect').value;
+            const selectElement = document.getElementById('loanClientSelect');
+            const client = selectElement.value;
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const phone = selectedOption.getAttribute('data-phone') || '';
+            
             const amount = parseFloat(document.getElementById('loanAmount').value);
             const frequency = document.getElementById('loanFrequency').value;
             const installment = parseFloat(document.getElementById('loanInstallment').value);
             const totalCuotas = parseInt(document.getElementById('loanTotalCuotas').value);
 
             loansRef.push().set({
-                client, amount, frequency, installment,
+                client, phone, amount, frequency, installment,
                 faltantes: totalCuotas,
                 totalCuotas: totalCuotas
             }, (error) => {
@@ -253,33 +278,37 @@
             });
         });
 
-        // Leer Ruta de Cobro
+        // Leer Ruta de Cobro con opciones de Cobrar, Imprimir, WhatsApp y Borrar
         loansRef.on('value', (snapshot) => {
             const tbody = document.getElementById('routeTableBody');
             tbody.innerHTML = '';
             const data = snapshot.val();
             if(!data) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay préstamos activos registrados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay préstamos activos registrados.</td></tr>';
                 return;
             }
             for(let id in data) {
                 const item = data[id];
+                const phoneWa = item.phone || '';
+                const mensajeWa = encodeURIComponent(`Hola ${item.client}, le escribimos de E&S Presta Fácil para recordarle su cuota pendiente de RD$ ${item.installment.toFixed(2)}. Cuotas restantes: ${item.faltantes}/${item.totalCuotas}. ¡Gracias!`);
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${item.client}</strong></td>
-                        <td>${item.frequency}</td>
+                        <td><strong>${item.client}</strong><br><small>${item.frequency}</small></td>
                         <td>RD$ ${item.installment.toFixed(2)}</td>
                         <td>${item.faltantes} / ${item.totalCuotas}</td>
                         <td>
-                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', ${item.installment}, ${item.faltantes})">Cobrar Cuota 💵</button>
-                            <button class="btn-delete" onclick="eliminar('${id}')" style="margin-left: 5px;">X</button>
+                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', ${item.installment}, ${item.faltantes})">Cobrar 💵</button>
+                            <a class="btn-wa" href="https://wa.me/${phoneWa}?text=${mensajeWa}" target="_blank">📲 WA</a>
+                            <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️ Imprimir</button>
+                            <button class="btn-delete" onclick="eliminar('${id}')">X</button>
                         </td>
                     </tr>
                 `;
             }
         });
 
-        // Registrar Cobro y guardar en Historial / Balances
+        // Registrar Cobro en la nube de forma segura
         window.cobrar = function(loanId, clientName, amount, faltantes) {
             if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
@@ -297,15 +326,23 @@
                 month: now.getMonth() + 1
             };
 
-            // 1. Guardar pago en el historial global
             paymentsRef.push().set(paymentData, (error) => {
                 if(!error) {
-                    // 2. Descontar la cuota
                     loansRef.child(loanId).update({ faltantes: faltantes - 1 });
+                    alert('¡Cobro registrado con éxito!');
                 } else {
                     alert('Error al registrar cobro: ' + error.message);
                 }
             });
+        };
+
+        // Función para imprimir ticket
+        window.imprimirTicket = function(client, amount, faltantes) {
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('es-DO');
+            document.getElementById('print-client').innerText = client;
+            document.getElementById('print-amount').innerText = amount.toFixed(2);
+            document.getElementById('print-faltantes').innerText = (faltantes - 1);
+            window.print();
         };
 
         // Eliminar Préstamo
@@ -315,7 +352,7 @@
             }
         };
 
-        // Escuchar Pagos para actualizar Balances y Reportes (Diarios, Semanales, Mensuales, Anuales)
+        // Escuchar Pagos para actualizar Balances y Reportes
         paymentsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const tbody = document.getElementById('historyTableBody');
@@ -330,8 +367,6 @@
             const todayStr = now.toLocaleDateString('es-DO');
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth() + 1;
-            
-            // Calculo inicio de semana (hace 7 días)
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(now.getDate() - 7);
 
@@ -342,18 +377,16 @@
                 for(let id in data) {
                     items.push(data[id]);
                 }
-                items.reverse(); // Mostrar los más recientes primero
+                items.reverse();
 
                 items.forEach(pago => {
                     const pDate = new Date(pago.timestamp);
 
-                    // Acumuladores de tiempo
                     if(pago.dateStr === todayStr) totalToday += pago.amount;
                     if(pDate >= oneWeekAgo) totalWeek += pago.amount;
                     if(pago.year === currentYear && pago.month === currentMonth) totalMonth += pago.amount;
                     if(pago.year === currentYear) totalYear += pago.amount;
 
-                    // Fila del historial
                     tbody.innerHTML += `
                         <tr>
                             <td>${pago.dateStr}</td>
@@ -364,7 +397,6 @@
                 });
             }
 
-            // Actualizar KPIs en pantalla
             document.getElementById('kpiToday').innerText = `RD$ ${totalToday.toFixed(2)}`;
             document.getElementById('kpiWeek').innerText = `RD$ ${totalWeek.toFixed(2)}`;
             document.getElementById('kpiMonth').innerText = `RD$ ${totalMonth.toFixed(2)}`;
