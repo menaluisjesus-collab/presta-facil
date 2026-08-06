@@ -33,7 +33,6 @@
         .kpi-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
         .kpi-card .amount { font-size: 1.4rem; font-weight: bold; color: #1e293b; }
         
-        /* Estilo para impresión de recibos */
         @media print {
             body * { visibility: hidden; }
             #printable-ticket, #printable-ticket * { visibility: visible; }
@@ -42,7 +41,6 @@
         #printable-ticket { display: none; }
     </style>
 
-    <!-- Firebase SDK Compatibles -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
@@ -54,7 +52,6 @@
             <p><small>Sistema de Control y Cobros en Tiempo Real</small></p>
         </header>
 
-        <!-- Navegación de Pestañas -->
         <div class="nav-tabs">
             <button class="tab-btn active" onclick="switchTab('clientes')">Clientes</button>
             <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
@@ -62,7 +59,6 @@
             <button class="tab-btn" onclick="switchTab('reportes')">Balances y Reportes</button>
         </div>
 
-        <!-- Pestaña Clientes -->
         <div id="tab-clientes" class="tab-content active card">
             <h2>Registrar Cliente</h2>
             <form id="clientForm">
@@ -82,7 +78,6 @@
             </form>
         </div>
 
-        <!-- Pestaña Préstamos -->
         <div id="tab-prestamos" class="tab-content card">
             <h2>Crear Préstamo</h2>
             <form id="loanForm">
@@ -117,7 +112,6 @@
             </form>
         </div>
 
-        <!-- Pestaña Ruta de Cobro -->
         <div id="tab-ruta" class="tab-content card">
             <h2>📋 Cobros Pendientes y Ruta</h2>
             <div style="overflow-x: auto;">
@@ -137,7 +131,6 @@
             </div>
         </div>
 
-        <!-- Pestaña Balances y Reportes -->
         <div id="tab-reportes" class="tab-content card">
             <h2>📊 Resumen Financiero y Balances</h2>
             <div class="kpi-grid">
@@ -177,7 +170,6 @@
         </div>
     </div>
 
-    <!-- Contenedor oculto para impresión física de recibos -->
     <div id="printable-ticket">
         <h2 style="text-align:center;">E&S PRESTA FÁCIL</h2>
         <p style="text-align:center;">Recibo de Pago de Préstamo</p>
@@ -220,7 +212,6 @@
             }
         }
 
-        // Guardar Cliente con Teléfono
         document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('clientName').value;
@@ -238,7 +229,6 @@
             });
         });
 
-        // Cargar Lista de Clientes en Préstamos con su teléfono guardado
         clientsRef.on('value', (snapshot) => {
             const select = document.getElementById('loanClientSelect');
             select.innerHTML = '<option value="">Seleccione un cliente</option>';
@@ -250,7 +240,6 @@
             }
         });
 
-        // Crear Préstamo vinculando el teléfono del cliente automáticamente
         document.getElementById('loanForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const selectElement = document.getElementById('loanClientSelect');
@@ -278,7 +267,6 @@
             });
         });
 
-        // Leer Ruta de Cobro con opciones de Cobrar, Imprimir, WhatsApp y Borrar
         loansRef.on('value', (snapshot) => {
             const tbody = document.getElementById('routeTableBody');
             tbody.innerHTML = '';
@@ -290,7 +278,17 @@
             for(let id in data) {
                 const item = data[id];
                 const phoneWa = item.phone || '';
-                const mensajeWa = encodeURIComponent(`Hola ${item.client}, le escribimos de E&S Presta Fácil para recordarle su cuota pendiente de RD$ ${item.installment.toFixed(2)}. Cuotas restantes: ${item.faltantes}/${item.totalCuotas}. ¡Gracias!`);
+                const cuotasRestantesDespues = Math.max(0, item.faltantes - 1);
+                
+                // Mensaje tipo Ticket en formato WhatsApp
+                const ticketTexto = `*E&S PRESTA FÁCIL* %0A` +
+                                    `📄 *RECIBO DE PAGO* %0A` +
+                                    `---------------------------------- %0A` +
+                                    `👤 *Cliente:* ${item.client} %0A` +
+                                    `💵 *Monto Abonado:* RD$ ${item.installment.toFixed(2)} %0A` +
+                                    `📊 *Cuotas Restantes:* ${cuotasRestantesDespues} / ${item.totalCuotas} %0A` +
+                                    `---------------------------------- %0A` +
+                                    `¡Gracias por su pago puntual! ✨`;
 
                 tbody.innerHTML += `
                     <tr>
@@ -299,7 +297,7 @@
                         <td>${item.faltantes} / ${item.totalCuotas}</td>
                         <td>
                             <button class="btn-action" onclick="cobrar('${id}', '${item.client}', ${item.installment}, ${item.faltantes})">Cobrar 💵</button>
-                            <a class="btn-wa" href="https://wa.me/${phoneWa}?text=${mensajeWa}" target="_blank">📲 WA</a>
+                            <a class="btn-wa" href="https://wa.me/${phoneWa}?text=${ticketTexto}" target="_blank">📲 Ticket WA</a>
                             <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️ Imprimir</button>
                             <button class="btn-delete" onclick="eliminar('${id}')">X</button>
                         </td>
@@ -308,7 +306,6 @@
             }
         });
 
-        // Registrar Cobro en la nube de forma segura
         window.cobrar = function(loanId, clientName, amount, faltantes) {
             if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
@@ -336,7 +333,6 @@
             });
         };
 
-        // Función para imprimir ticket
         window.imprimirTicket = function(client, amount, faltantes) {
             document.getElementById('print-date').innerText = new Date().toLocaleDateString('es-DO');
             document.getElementById('print-client').innerText = client;
@@ -345,14 +341,12 @@
             window.print();
         };
 
-        // Eliminar Préstamo
         window.eliminar = function(id) {
             if(confirm('¿Deseas eliminar este registro de la nube?')) {
                 loansRef.child(id).remove();
             }
         };
 
-        // Escuchar Pagos para actualizar Balances y Reportes
         paymentsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const tbody = document.getElementById('historyTableBody');
