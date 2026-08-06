@@ -9,17 +9,22 @@
         body { background-color: #f4f6f9; color: #333; padding: 15px; }
         header { background-color: #1a252f; color: #fff; padding: 15px 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
         .container { max-width: 900px; margin: 0 auto; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: none; background: #e0e6ed; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
+        .tab-btn.active { background: #2563eb; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card h2 { font-size: 1.2rem; margin-bottom: 15px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 8px; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-        .btn { display: inline-block; width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; }
+        .btn { display: inline-block; width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn:hover { background-color: #219150; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         th { background-color: #f8f9fa; }
-        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     </style>
 
@@ -35,51 +40,92 @@
             <p><small>Empresa: E&S Presta Fácil</small></p>
         </header>
 
-        <!-- Formulario -->
-        <div class="card">
-            <h2>Registrar Nuevo Préstamo</h2>
-            <form id="loanForm">
+        <!-- Navegación de Pestañas -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('clientes')">Clientes</button>
+            <button class="tab-btn" onclick="switchTab('prestamos')">Préstamos</button>
+            <button class="tab-btn" onclick="switchTab('ruta')">Ruta de Cobro</button>
+        </div>
+
+        <!-- Pestaña Clientes -->
+        <div id="tab-clientes" class="tab-content active card">
+            <h2>Registrar Cliente</h2>
+            <form id="clientForm">
                 <div class="form-group">
-                    <label>Nombre del Cliente</label>
-                    <input type="text" id="name" placeholder="Ej: Juan Pérez" required>
+                    <label>Nombre Completo</label>
+                    <input type="text" id="clientName" placeholder="Ej: Juan Pérez" required>
                 </div>
                 <div class="form-group">
-                    <label>Monto Prestado (RD$)</label>
-                    <input type="number" id="amount" placeholder="5000" required>
+                    <label>Cédula</label>
+                    <input type="text" id="clientCedula" placeholder="001-0000000-0" required>
                 </div>
                 <div class="form-group">
-                    <label>Cuota por Cobrar (RD$)</label>
-                    <input type="number" id="installment" placeholder="300" required>
+                    <label>Teléfono</label>
+                    <input type="tel" id="clientPhone" placeholder="809-000-0000" required>
                 </div>
-                <div class="form-group">
-                    <label>Total de Cuotas</label>
-                    <input type="number" id="totalCuotas" placeholder="20" value="20" required>
-                </div>
-                <button type="submit" class="btn">Guardar Préstamo</button>
+                <button type="submit" class="btn">Guardar Cliente</button>
             </form>
         </div>
 
-        <!-- Tabla Cobros Pendientes -->
-        <div class="card">
-            <h2>📋 Cobros Pendientes (Ruta de Cobro)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Cuota (RD$)</th>
-                        <th>Faltantes</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="loansTableBody">
-                    <tr><td colspan="4" style="text-align:center;">Cargando cobros en tiempo real...</td></tr>
-                </tbody>
-            </table>
+        <!-- Pestaña Préstamos -->
+        <div id="tab-prestamos" class="tab-content card">
+            <h2>Crear Préstamo</h2>
+            <form id="loanForm">
+                <div class="form-group">
+                    <label>Seleccionar Cliente</label>
+                    <select id="loanClientSelect" required>
+                        <option value="">Cargando clientes...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto Prestado (RD$)</label>
+                    <input type="number" id="loanAmount" placeholder="5000" required>
+                </div>
+                <div class="form-group">
+                    <label>Frecuencia de Pago</label>
+                    <select id="loanFrequency">
+                        <option value="Diario">Diario</option>
+                        <option value="Semanal">Semanal</option>
+                        <option value="Quincenal">Quincenal</option>
+                        <option value="Mensual">Mensual</option>
+                        <option value="Anual">Anual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto por Cuota (RD$)</label>
+                    <input type="number" id="loanInstallment" placeholder="300" required>
+                </div>
+                <div class="form-group">
+                    <label>Total de Cuotas</label>
+                    <input type="number" id="loanTotalCuotas" value="20" required>
+                </div>
+                <button type="submit" class="btn">Crear Préstamo</button>
+            </form>
+        </div>
+
+        <!-- Pestaña Ruta de Cobro -->
+        <div id="tab-ruta" class="tab-content card">
+            <h2>📋 Cobros Pendientes</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Frecuencia</th>
+                            <th>Cuota (RD$)</th>
+                            <th>Faltantes</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routeTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Cargando cobros en la nube...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBuu3o8cpHPTk_hhaQhhaqOTr44XHoqu3U",
             authDomain: "prestafacil-572fc.firebaseapp.com",
@@ -93,76 +139,117 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const clientsRef = database.ref('clientes');
         const loansRef = database.ref('prestamos');
 
-        const loanForm = document.getElementById('loanForm');
-        const loansTableBody = document.getElementById('loansTableBody');
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tabName === 'clientes') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-clientes').classList.add('active');
+            } else if(tabName === 'prestamos') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-prestamos').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab-ruta').classList.add('active');
+            }
+        }
 
-        // Guardar préstamo en Firebase
-        loanForm.addEventListener('submit', (e) => {
+        // Guardar Cliente en Firebase
+        document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            const name = document.getElementById('clientName').value;
+            const cedula = document.getElementById('clientCedula').value;
+            const phone = document.getElementById('clientPhone').value;
 
-            const name = document.getElementById('name').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const installment = parseFloat(document.getElementById('installment').value);
-            const totalCuotas = parseInt(document.getElementById('totalCuotas').value);
-
-            const newLoanRef = loansRef.push();
-            newLoanRef.set({
-                name: name,
-                amount: amount,
-                installment: installment,
-                faltantes: totalCuotas,
-                totalCuotas: totalCuotas
-            }, (error) => {
-                if (error) {
-                    alert('Error al guardar en la nube: ' + error.message);
+            clientsRef.push().set({ name, cedula, phone }, (error) => {
+                if(!error) {
+                    alert('Cliente guardado con éxito');
+                    document.getElementById('clientForm').reset();
+                    switchTab('prestamos');
                 } else {
-                    loanForm.reset();
+                    alert('Error: ' + error.message);
                 }
             });
         });
 
-        // Escuchar datos de Firebase en tiempo real
-        loansRef.on('value', (snapshot) => {
-            loansTableBody.innerHTML = '';
+        // Cargar Lista de Clientes en el formulario de Préstamos
+        clientsRef.on('value', (snapshot) => {
+            const select = document.getElementById('loanClientSelect');
+            select.innerHTML = '<option value="">Seleccione un cliente</option>';
             const data = snapshot.val();
-
-            if (!data) {
-                loansTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay cobros registrados en la nube.</td></tr>';
-                return;
-            }
-
-            for (let id in data) {
-                const item = data[id];
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.name}</strong></td>
-                    <td>RD$ ${item.installment.toFixed(2)}</td>
-                    <td>${item.faltantes} / ${item.totalCuotas}</td>
-                    <td>
-                        <button class="btn-action" onclick="cobrarCuota('${id}', ${item.faltantes})">Cobrar Cuota 💵</button>
-                        <button class="btn-delete" onclick="eliminarPrestamo('${id}')" style="margin-left: 5px;">X</button>
-                    </td>
-                `;
-                loansTableBody.appendChild(tr);
+            if(data) {
+                for(let id in data) {
+                    select.innerHTML += `<option value="${data[id].name}">${data[id].name}</option>`;
+                }
             }
         });
 
-        // Cobrar cuota en la nube
-        window.cobrarCuota = function(id, faltantesActuales) {
-            if (faltantesActuales > 0) {
-                loansRef.child(id).update({
-                    faltantes: faltantesActuales - 1
-                });
+        // Crear Préstamo en Firebase
+        document.getElementById('loanForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const client = document.getElementById('loanClientSelect').value;
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const frequency = document.getElementById('loanFrequency').value;
+            const installment = parseFloat(document.getElementById('loanInstallment').value);
+            const totalCuotas = parseInt(document.getElementById('loanTotalCuotas').value);
+
+            loansRef.push().set({
+                client, amount, frequency, installment,
+                faltantes: totalCuotas,
+                totalCuotas: totalCuotas
+            }, (error) => {
+                if(!error) {
+                    alert('Préstamo creado con éxito');
+                    document.getElementById('loanForm').reset();
+                    switchTab('ruta');
+                } else {
+                    alert('Error: ' + error.message);
+                }
+            });
+        });
+
+        // Leer Ruta de Cobro desde Firebase
+        loansRef.on('value', (snapshot) => {
+            const tbody = document.getElementById('routeTableBody');
+            tbody.innerHTML = '';
+            const data = snapshot.val();
+            if(!data) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay préstamos activos registrados.</td></tr>';
+                return;
+            }
+            for(let id in data) {
+                const item = data[id];
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.client}</strong></td>
+                        <td>${item.frequency}</td>
+                        <td>RD$ ${item.installment.toFixed(2)}</td>
+                        <td>${item.faltantes} / ${item.totalCuotas}</td>
+                        <td>
+                            <button class="btn-action" onclick="cobrar('${id}', ${item.faltantes})">Cobrar Cuota 💵</button>
+                            <button class="btn-delete" onclick="eliminar('${id}')" style="margin-left: 5px;">X</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        // Descontar una cuota
+        window.cobrar = function(id, faltantes) {
+            if(faltantes > 0) {
+                loansRef.child(id).update({ faltantes: faltantes - 1 });
             } else {
-                alert('Este cliente ya completó todas sus cuotas.');
+                alert('El préstamo ya se encuentra pagado por completo.');
             }
         };
 
-        // Eliminar préstamo de la nube
-        window.eliminarPrestamo = function(id) {
-            if (confirm('¿Deseas eliminar este registro de la nube?')) {
+        // Eliminar registro
+        window.eliminar = function(id) {
+            if(confirm('¿Deseas eliminar este registro de la nube?')) {
                 loansRef.child(id).remove();
             }
         };
