@@ -44,8 +44,11 @@
 
         .btn { padding: 11px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-block; width: 100%; text-align: center; }
         .btn:hover { opacity: 0.95; }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; width: auto; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; width: auto; margin-right: 4px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
@@ -54,10 +57,16 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Modal Ticket */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99; justify-content:center; align-items:center; }
         .modal-body { background:white; padding:20px; border-radius:12px; max-width:400px; width:90%; }
         .ticket-box { background: #fff8f0; border: 1px dashed #d97706; padding: 15px; font-family: monospace; font-size: 0.85rem; margin-top: 10px; white-space: pre-wrap; word-break: break-all; }
+
+        /* Estilo para impresión limpia */
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-text, #ticket-text * { visibility: visible; }
+            #ticket-text { position: absolute; left: 0; top: 0; width: 100%; border: none; font-size: 12pt; }
+        }
     </style>
 </head>
 <body>
@@ -101,8 +110,9 @@
     <!-- CLIENTES -->
     <div id="clientes" class="tab-content">
         <div class="card">
-            <h3>➕ Registrar Nuevo Cliente</h3>
+            <h3 id="form-cliente-titulo">➕ Registrar Nuevo Cliente</h3>
             <form id="form-cliente" onsubmit="guardarCliente(event)">
+                <input type="hidden" id="cli-id">
                 <div class="form-group">
                     <label>Nombre Completo</label>
                     <input type="text" id="cli-nombre" required placeholder="Ej: Juan Pérez">
@@ -119,7 +129,8 @@
                     <label>Dirección / Sector</label>
                     <input type="text" id="cli-direccion" required placeholder="Calle 12 #34, Sector">
                 </div>
-                <button type="submit" class="btn btn-success">Guardar Cliente</button>
+                <button type="submit" id="btn-guardar-cliente" class="btn btn-success">Guardar Cliente</button>
+                <button type="button" id="btn-cancelar-cliente" class="btn" style="background:#cbd5e1; color:#1e293b; margin-top:8px; display:none;" onclick="cancelarEdicion()">Cancelar Edición</button>
             </form>
         </div>
 
@@ -133,6 +144,7 @@
                         <th>Cédula</th>
                         <th>Teléfono</th>
                         <th>Dirección</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-clientes"></tbody>
@@ -195,20 +207,20 @@
 
 </div>
 
-<!-- MODAL TICKET WHATSAPP -->
+<!-- MODAL TICKET WHATSAPP E IMPRESIÓN -->
 <div id="modal-ticket" class="modal">
     <div class="modal-body">
         <h3>✅ Cobro Registrado</h3>
-        <p style="font-size: 0.85rem; color:#64748b;">Recibo generado para WhatsApp:</p>
+        <p style="font-size: 0.85rem; color:#64748b;">Recibo generado:</p>
         <div id="ticket-text" class="ticket-box"></div>
         <br>
+        <button id="btn-imprimir" class="btn btn-primary" style="margin-bottom:8px;" onclick="imprimirTicket()">Imprimir Recibo 🖨️</button>
         <button id="btn-wa" class="btn btn-success" style="margin-bottom:8px;">Enviar por WhatsApp 📲</button>
         <button class="btn" style="background:#cbd5e1; color:#1e293b;" onclick="cerrarModal()">Cerrar</button>
     </div>
 </div>
 
 <script>
-    // BASE DE DATOS LOCAL
     let db = {
         clientes: JSON.parse(localStorage.getItem('es_clientes')) || [],
         prestamos: JSON.parse(localStorage.getItem('es_prestamos')) || [],
@@ -231,17 +243,61 @@
 
     function guardarCliente(e) {
         e.preventDefault();
-        const cliente = {
-            id: Date.now(),
-            nombre: document.getElementById('cli-nombre').value,
-            cedula: document.getElementById('cli-cedula').value,
-            telefono: document.getElementById('cli-telefono').value,
-            direccion: document.getElementById('cli-direccion').value
-        };
-        db.clientes.push(cliente);
+        const id = document.getElementById('cli-id').value;
+        const nombre = document.getElementById('cli-nombre').value;
+        const cedula = document.getElementById('cli-cedula').value;
+        const telefono = document.getElementById('cli-telefono').value;
+        const direccion = document.getElementById('cli-direccion').value;
+
+        if (id) {
+            const index = db.clientes.findIndex(c => c.id === parseInt(id));
+            if (index !== -1) {
+                db.clientes[index] = { id: parseInt(id), nombre, cedula, telefono, direccion };
+                alert('Cliente actualizado con éxito.');
+            }
+        } else {
+            const cliente = { id: Date.now(), nombre, cedula, telefono, direccion };
+            db.clientes.push(cliente);
+            alert('Cliente registrado con éxito.');
+        }
+
+        cancelarEdicion();
         guardarDB();
+    }
+
+    function editarCliente(id) {
+        const cliente = db.clientes.find(c => c.id === id);
+        if (cliente) {
+            document.getElementById('cli-id').value = cliente.id;
+            document.getElementById('cli-nombre').value = cliente.nombre;
+            document.getElementById('cli-cedula').value = cliente.cedula;
+            document.getElementById('cli-telefono').value = cliente.telefono;
+            document.getElementById('cli-direccion').value = cliente.direccion;
+
+            document.getElementById('form-cliente-titulo').innerText = '✏️ Editar Cliente';
+            document.getElementById('btn-guardar-cliente').innerText = 'Guardar Cambios';
+            document.getElementById('btn-guardar-cliente').className = 'btn btn-warning';
+            document.getElementById('btn-cancelar-cliente').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function cancelarEdicion() {
+        document.getElementById('cli-id').value = '';
         document.getElementById('form-cliente').reset();
-        alert('Cliente registrado con éxito.');
+        document.getElementById('form-cliente-titulo').innerText = '➕ Registrar Nuevo Cliente';
+        document.getElementById('btn-guardar-cliente').innerText = 'Guardar Cliente';
+        document.getElementById('btn-guardar-cliente').className = 'btn btn-success';
+        document.getElementById('btn-cancelar-cliente').style.display = 'none';
+    }
+
+    function eliminarCliente(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar este cliente? Esto también eliminará sus préstamos.')) {
+            db.clientes = db.clientes.filter(c => c.id !== id);
+            db.prestamos = db.prestamos.filter(p => p.clienteId !== id);
+            guardarDB();
+            alert('Cliente eliminado correctamente.');
+        }
     }
 
     function guardarPrestamo(e) {
@@ -292,7 +348,6 @@
             db.pagos.push(pago);
             guardarDB();
 
-            // Generar Ticket
             mostrarTicket(cliente, prestamo, pago);
         }
     }
@@ -327,12 +382,15 @@ crédito al día con nosotros!`;
         document.getElementById('modal-ticket').style.display = 'flex';
     }
 
+    function imprimirTicket() {
+        window.print();
+    }
+
     function cerrarModal() {
         document.getElementById('modal-ticket').style.display = 'none';
     }
 
     function render() {
-        // Render Clientes
         const tablaCli = document.getElementById('tabla-clientes');
         const selectCli = document.getElementById('pres-cliente');
         tablaCli.innerHTML = '';
@@ -345,12 +403,15 @@ crédito al día con nosotros!`;
                 <td>${c.cedula}</td>
                 <td>${c.telefono}</td>
                 <td>${c.direccion}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editarCliente(${c.id})">✏️</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${c.id})">🗑️</button>
+                </td>
             </tr>`;
 
             selectCli.innerHTML += `<option value="${c.id}">${c.nombre} (${c.cedula})</option>`;
         });
 
-        // Render Cobros
         const tablaCobros = document.getElementById('tabla-cobros');
         tablaCobros.innerHTML = '';
         let activosCount = 0;
@@ -370,14 +431,12 @@ crédito al día con nosotros!`;
             </tr>`;
         });
 
-        // Dashboard
         document.getElementById('dash-activos').innerText = activosCount;
         
         const totalCobradoHoy = db.pagos.reduce((acc, p) => acc + p.monto, 0);
         document.getElementById('dash-cobrado').innerText = `RD$ ${totalCobradoHoy.toFixed(2)}`;
     }
 
-    // Inicializar
     render();
 </script>
 
