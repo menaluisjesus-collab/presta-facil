@@ -10,7 +10,7 @@
         header { background-color: #1a252f; color: #fff; padding: 15px 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
         .container { max-width: 950px; margin: 0 auto; }
         .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 12px 15px; border: none; background: #e0e6ed; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; min-width: 120px; text-align: center; }
+        .tab-btn { padding: 12px 15px; border: none; background: #e0e6ed; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; min-width: 110px; text-align: center; }
         .tab-btn.active { background: #2563eb; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -25,14 +25,20 @@
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         th { background-color: #f8f9fa; }
         .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
-        .btn-wa { background-color: #25D366; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; text-decoration: none; display: inline-block; }
         .btn-print { background-color: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
-        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 3px; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }
         .kpi-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
         .kpi-card .amount { font-size: 1.4rem; font-weight: bold; color: #1e293b; }
-        
+
+        /* Modal / Ventana Emergente de Cobro Exitoso y Ticket */
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
+        #modal-ticket-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .ticket-pre { background: #f8f9fa; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 6px; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.4; color: #1e293b; margin: 15px 0; }
+        .modal-btn-wa { display: block; width: 100%; padding: 12px; background-color: #25D366; color: white; text-align: center; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; text-decoration: none; margin-bottom: 10px; cursor: pointer; }
+        .modal-btn-close { display: block; width: 100%; padding: 10px; background-color: #e2e8f0; color: #475569; text-align: center; border: none; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
+
         @media print {
             body * { visibility: hidden; }
             #printable-ticket, #printable-ticket * { visibility: visible; }
@@ -59,9 +65,11 @@
             <button class="tab-btn" onclick="switchTab('reportes')">Balances y Reportes</button>
         </div>
 
+        <!-- Pestaña Clientes -->
         <div id="tab-clientes" class="tab-content active card">
-            <h2>Registrar Cliente</h2>
-            <form id="clientForm">
+            <h2>Directorio y Registro de Clientes</h2>
+            <form id="clientForm" style="margin-bottom: 25px;">
+                <input type="hidden" id="editClientId">
                 <div class="form-group">
                     <label>Nombre Completo</label>
                     <input type="text" id="clientName" placeholder="Ej: Juan Pérez" required>
@@ -74,10 +82,29 @@
                     <label>Teléfono (Para WhatsApp)</label>
                     <input type="tel" id="clientPhone" placeholder="18090000000" required>
                 </div>
-                <button type="submit" class="btn">Guardar Cliente</button>
+                <button type="submit" class="btn" id="clientSubmitBtn">Guardar Cliente</button>
+                <button type="button" id="cancelEditClientBtn" class="btn" style="background-color: #64748b; margin-top: 8px; display:none;" onclick="resetClientForm()">Cancelar Edición</button>
             </form>
+
+            <h3 style="font-size: 1rem; margin-bottom: 10px; color: #2c3e50;">Clientes Registrados</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Cédula</th>
+                            <th>Teléfono</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <tr><td colspan="4" style="text-align:center;">Cargando clientes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <!-- Pestaña Préstamos -->
         <div id="tab-prestamos" class="tab-content card">
             <h2>Crear Préstamo</h2>
             <form id="loanForm">
@@ -112,6 +139,7 @@
             </form>
         </div>
 
+        <!-- Pestaña Ruta de Cobro -->
         <div id="tab-ruta" class="tab-content card">
             <h2>📋 Cobros Pendientes y Ruta</h2>
             <div style="overflow-x: auto;">
@@ -121,7 +149,7 @@
                             <th>Cliente</th>
                             <th>Cuota (RD$)</th>
                             <th>Faltantes</th>
-                            <th>Acciones y Opciones</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="routeTableBody">
@@ -131,6 +159,7 @@
             </div>
         </div>
 
+        <!-- Pestaña Balances y Reportes -->
         <div id="tab-reportes" class="tab-content card">
             <h2>📊 Resumen Financiero y Balances</h2>
             <div class="kpi-grid">
@@ -167,6 +196,17 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Emergente del Ticket Formato Exacto -->
+    <div id="modal-overlay">
+        <div id="modal-ticket-box">
+            <h3 style="color: #27ae60; margin-bottom: 5px;">✅ Cobro Registrado</h3>
+            <p style="font-size: 0.85rem; color: #64748b;">Recibo generado para WhatsApp:</p>
+            <div class="ticket-pre" id="modal-ticket-text"></div>
+            <a id="modal-whatsapp-btn" class="modal-btn-wa" href="#" target="_blank">Enviar por WhatsApp 📲</a>
+            <button class="modal-btn-close" onclick="closeModal()">Cerrar</button>
         </div>
     </div>
 
@@ -212,40 +252,98 @@
             }
         }
 
+        // Guardar o Actualizar Cliente
         document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            const editId = document.getElementById('editClientId').value;
             const name = document.getElementById('clientName').value;
             const cedula = document.getElementById('clientCedula').value;
             const phone = document.getElementById('clientPhone').value;
 
-            clientsRef.push().set({ name, cedula, phone }, (error) => {
-                if(!error) {
-                    alert('Cliente guardado con éxito');
-                    document.getElementById('clientForm').reset();
-                    switchTab('prestamos');
-                } else {
-                    alert('Error: ' + error.message);
-                }
-            });
-        });
-
-        clientsRef.on('value', (snapshot) => {
-            const select = document.getElementById('loanClientSelect');
-            select.innerHTML = '<option value="">Seleccione un cliente</option>';
-            const data = snapshot.val();
-            if(data) {
-                for(let id in data) {
-                    select.innerHTML += `<option value="${data[id].name}" data-phone="${data[id].phone || ''}">${data[id].name}</option>`;
-                }
+            if(editId) {
+                clientsRef.child(editId).update({ name, cedula, phone }, (error) => {
+                    if(!error) {
+                        alert('Cliente actualizado con éxito');
+                        resetClientForm();
+                    } else {
+                        alert('Error: ' + error.message);
+                    }
+                });
+            } else {
+                clientsRef.push().set({ name, cedula, phone }, (error) => {
+                    if(!error) {
+                        alert('Cliente guardado con éxito');
+                        document.getElementById('clientForm').reset();
+                        switchTab('prestamos');
+                    } else {
+                        alert('Error: ' + error.message);
+                    }
+                });
             }
         });
 
+        window.resetClientForm = function() {
+            document.getElementById('clientForm').reset();
+            document.getElementById('editClientId').value = '';
+            document.getElementById('clientSubmitBtn').innerText = 'Guardar Cliente';
+            document.getElementById('cancelEditClientBtn').style.display = 'none';
+        }
+
+        // Cargar Lista de Clientes con Opciones de Editar y Borrar
+        clientsRef.on('value', (snapshot) => {
+            const select = document.getElementById('loanClientSelect');
+            const tbody = document.getElementById('clientsTableBody');
+            select.innerHTML = '<option value="">Seleccione un cliente</option>';
+            tbody.innerHTML = '';
+            
+            const data = snapshot.val();
+            if(!data) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay clientes registrados.</td></tr>';
+                return;
+            }
+
+            for(let id in data) {
+                const item = data[id];
+                select.innerHTML += `<option value="${item.name}" data-cedula="${item.cedula || ''}" data-phone="${item.phone || ''}">${item.name}</option>`;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.cedula || 'N/A'}</td>
+                        <td>${item.phone || 'N/A'}</td>
+                        <td>
+                            <button class="btn-action" style="background-color: #3b82f6;" onclick="editarCliente('${id}', '${item.name}', '${item.cedula || ''}', '${item.phone || ''}')">Editar</button>
+                            <button class="btn-delete" onclick="eliminarCliente('${id}')">Borrar</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        window.editarCliente = function(id, name, cedula, phone) {
+            document.getElementById('editClientId').value = id;
+            document.getElementById('clientName').value = name;
+            document.getElementById('clientCedula').value = cedula;
+            document.getElementById('clientPhone').value = phone;
+            document.getElementById('clientSubmitBtn').innerText = 'Actualizar Cliente';
+            document.getElementById('cancelEditClientBtn').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        window.eliminarCliente = function(id) {
+            if(confirm('¿Deseas eliminar este cliente?')) {
+                clientsRef.child(id).remove();
+            }
+        }
+
+        // Crear Préstamo
         document.getElementById('loanForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const selectElement = document.getElementById('loanClientSelect');
             const client = selectElement.value;
             const selectedOption = selectElement.options[selectElement.selectedIndex];
             const phone = selectedOption.getAttribute('data-phone') || '';
+            const cedula = selectedOption.getAttribute('data-cedula') || 'N/A';
             
             const amount = parseFloat(document.getElementById('loanAmount').value);
             const frequency = document.getElementById('loanFrequency').value;
@@ -253,7 +351,7 @@
             const totalCuotas = parseInt(document.getElementById('loanTotalCuotas').value);
 
             loansRef.push().set({
-                client, phone, amount, frequency, installment,
+                client, phone, cedula, amount, frequency, installment,
                 faltantes: totalCuotas,
                 totalCuotas: totalCuotas
             }, (error) => {
@@ -267,6 +365,7 @@
             });
         });
 
+        // Ruta de Cobro
         loansRef.on('value', (snapshot) => {
             const tbody = document.getElementById('routeTableBody');
             tbody.innerHTML = '';
@@ -277,61 +376,78 @@
             }
             for(let id in data) {
                 const item = data[id];
-                const phoneWa = item.phone || '';
-                const cuotasRestantesDespues = Math.max(0, item.faltantes - 1);
-                
-                // Mensaje tipo Ticket en formato WhatsApp
-                const ticketTexto = `*E&S PRESTA FÁCIL* %0A` +
-                                    `📄 *RECIBO DE PAGO* %0A` +
-                                    `---------------------------------- %0A` +
-                                    `👤 *Cliente:* ${item.client} %0A` +
-                                    `💵 *Monto Abonado:* RD$ ${item.installment.toFixed(2)} %0A` +
-                                    `📊 *Cuotas Restantes:* ${cuotasRestantesDespues} / ${item.totalCuotas} %0A` +
-                                    `---------------------------------- %0A` +
-                                    `¡Gracias por su pago puntual! ✨`;
-
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${item.client}</strong><br><small>${item.frequency}</small></td>
                         <td>RD$ ${item.installment.toFixed(2)}</td>
                         <td>${item.faltantes} / ${item.totalCuotas}</td>
                         <td>
-                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', ${item.installment}, ${item.faltantes})">Cobrar 💵</button>
-                            <a class="btn-wa" href="https://wa.me/${phoneWa}?text=${ticketTexto}" target="_blank">📲 Ticket WA</a>
+                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button>
                             <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️ Imprimir</button>
-                            <button class="btn-delete" onclick="eliminar('${id}')">X</button>
+                            <button class="btn-delete" onclick="eliminarPrestamo('${id}')">X</button>
                         </td>
                     </tr>
                 `;
             }
         });
 
-        window.cobrar = function(loanId, clientName, amount, faltantes) {
+        // Registrar Cobro y Mostrar el Formato Exacto del Ticket en Modal
+        window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
             if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
                 return;
             }
 
             const now = new Date();
+            const dateStr = now.toLocaleDateString('es-DO');
+            const nuevasFaltantes = faltantes - 1;
+            const saldoRestante = nuevasFaltantes * amount;
+
             const paymentData = {
                 loanId: loanId,
                 client: clientName,
                 amount: amount,
                 timestamp: now.getTime(),
-                dateStr: now.toLocaleDateString('es-DO'),
+                dateStr: dateStr,
                 year: now.getFullYear(),
                 month: now.getMonth() + 1
             };
 
             paymentsRef.push().set(paymentData, (error) => {
                 if(!error) {
-                    loansRef.child(loanId).update({ faltantes: faltantes - 1 });
-                    alert('¡Cobro registrado con éxito!');
+                    loansRef.child(loanId).update({ faltantes: nuevasFaltantes });
+
+                    // Construcción exacta del ticket visual estilo la foto
+                    const ticketStr = 
+`==============================
+   E&S PRESTA FÁCIL PRO
+ RECIBO DE PAGO OFICIAL
+==============================
+Fecha: ${dateStr}
+Cliente: ${clientName.toUpperCase()}
+Cédula: ${cedula}
+------------------------------
+Cuota Pagada: RD$ ${amount.toFixed(2)}
+Modalidad: ${frequency}
+Progreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas
+Saldo Restante: RD$ ${saldoRestante.toFixed(2)}
+------------------------------
+¡Gracias por mantener su
+crédito al día con nosotros!`;
+
+                    document.getElementById('modal-ticket-text').innerText = ticketStr;
+                    const encodedText = encodeURIComponent(ticketStr);
+                    document.getElementById('modal-whatsapp-btn').href = `https://wa.me/${phone}?text=${encodedText}`;
+                    document.getElementById('modal-overlay').style.display = 'flex';
                 } else {
                     alert('Error al registrar cobro: ' + error.message);
                 }
             });
         };
+
+        window.closeModal = function() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
 
         window.imprimirTicket = function(client, amount, faltantes) {
             document.getElementById('print-date').innerText = new Date().toLocaleDateString('es-DO');
@@ -341,22 +457,19 @@
             window.print();
         };
 
-        window.eliminar = function(id) {
-            if(confirm('¿Deseas eliminar este registro de la nube?')) {
+        window.eliminarPrestamo = function(id) {
+            if(confirm('¿Deseas eliminar este préstamo de la nube?')) {
                 loansRef.child(id).remove();
             }
         };
 
+        // Reportes y Balances
         paymentsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
 
-            let totalToday = 0;
-            let totalWeek = 0;
-            let totalMonth = 0;
-            let totalYear = 0;
-
+            let totalToday = 0, totalWeek = 0, totalMonth = 0, totalYear = 0;
             const now = new Date();
             const todayStr = now.toLocaleDateString('es-DO');
             const currentYear = now.getFullYear();
@@ -368,14 +481,11 @@
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay registros de cobro aún.</td></tr>';
             } else {
                 let items = [];
-                for(let id in data) {
-                    items.push(data[id]);
-                }
+                for(let id in data) { items.push(data[id]); }
                 items.reverse();
 
                 items.forEach(pago => {
                     const pDate = new Date(pago.timestamp);
-
                     if(pago.dateStr === todayStr) totalToday += pago.amount;
                     if(pDate >= oneWeekAgo) totalWeek += pago.amount;
                     if(pago.year === currentYear && pago.month === currentMonth) totalMonth += pago.amount;
