@@ -106,7 +106,7 @@
                 </div>
                 <div class="form-group">
                     <label>Frecuencia de Pago</label>
-                    <select id="loanFrequency">
+                    <select id="loanFrequency" onchange="toggleInstallmentField()">
                         <option value="Diario">Diario</option>
                         <option value="Semanal">Semanal</option>
                         <option value="Quincenal">Quincenal</option>
@@ -114,9 +114,9 @@
                         <option value="A rédito / 15 y 30">A rédito / 15 y 30</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="installmentGroup">
                     <label>Monto por Cuota (RD$)</label>
-                    <input type="number" id="loanInstallment" placeholder="300" required>
+                    <input type="number" id="loanInstallment" placeholder="300">
                 </div>
                 <div class="form-group">
                     <label>Total de Cuotas</label>
@@ -204,6 +204,19 @@
             }
         }
 
+        function toggleInstallmentField() {
+            const freq = document.getElementById('loanFrequency').value;
+            const group = document.getElementById('installmentGroup');
+            const input = document.getElementById('loanInstallment');
+            if (freq === 'A rédito / 15 y 30') {
+                group.style.display = 'none';
+                input.value = '0';
+            } else {
+                group.style.display = 'block';
+                input.value = '';
+            }
+        }
+
         document.getElementById('clientForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const editId = document.getElementById('editClientId').value;
@@ -257,18 +270,22 @@
             e.preventDefault();
             const selectElement = document.getElementById('loanClientSelect');
             const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const frequency = document.getElementById('loanFrequency').value;
+            const installment = frequency === 'A rédito / 15 y 30' ? 0 : parseFloat(document.getElementById('loanInstallment').value);
+
             loansRef.push().set({
                 client: selectElement.value,
                 phone: selectedOption.getAttribute('data-phone') || '',
                 cedula: selectedOption.getAttribute('data-cedula') || 'N/A',
                 amount: parseFloat(document.getElementById('loanAmount').value),
-                frequency: document.getElementById('loanFrequency').value,
-                installment: parseFloat(document.getElementById('loanInstallment').value),
+                frequency: frequency,
+                installment: installment,
                 faltantes: parseInt(document.getElementById('loanTotalCuotas').value),
                 totalCuotas: parseInt(document.getElementById('loanTotalCuotas').value)
             });
             alert('Préstamo creado');
             document.getElementById('loanForm').reset();
+            toggleInstallmentField();
             switchTab('ruta');
         });
 
@@ -279,18 +296,19 @@
             if(!data) return;
             for(let id in data) {
                 const item = data[id];
+                const displayCuota = item.frequency === 'A rédito / 15 y 30' ? 'N/A (A rédito)' : `RD$ ${(item.installment || 0).toFixed(2)}`;
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${item.client}</strong></td>
-                        <td>RD$ ${item.installment.toFixed(2)}</td>
+                        <td>${displayCuota}</td>
                         <td>
                             <span onclick="editarCuotas('${id}', ${item.faltantes}, ${item.totalCuotas})" style="background: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e293b; display: inline-block;" title="Haz clic para editar cuotas">
                                 ${item.faltantes} / ${item.totalCuotas} ✏️
                             </span>
                         </td>
                         <td>
-                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button>
-                            <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️</button>
+                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment || 0}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button>
+                            <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment || 0}, ${item.faltantes})">🖨️</button>
                             <button class="btn-delete" onclick="eliminarPrestamo('${id}')">X</button>
                         </td>
                     </tr>
@@ -326,6 +344,18 @@
 
         window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
             if(faltantes <= 0) { alert('Ya pagado.'); return; }
+            
+            let pagoAmount = amount;
+            if(frequency === 'A rédito / 15 y 30') {
+                const ingresoMonto = prompt("Ingrese el monto cobrado para este rédito (RD$):", "0");
+                if(ingresoMonto === null) return;
+                pagoAmount = parseFloat(ingresoMonto);
+                if(isNaN(pagoAmount) || pagoAmount <= 0) {
+                    alert("Monto inválido.");
+                    return;
+                }
+            }
+
             const now = new Date();
             const dateStr = now.toLocaleDateString('es-DO');
             const nuevasFaltantes = faltantes - 1;
@@ -339,7 +369,7 @@
             paymentsRef.push().set({ 
                 loanId, 
                 client: clientName, 
-                amount, 
+                amount: pagoAmount, 
                 timestamp: now.getTime(), 
                 dateStr, 
                 year: now.getFullYear(), 
@@ -348,7 +378,7 @@
             });
             loansRef.child(loanId).update({ faltantes: nuevasFaltantes });
 
-            const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\n RECIBO DE PAGO OFICIAL\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nCuota Pagada: RD$ ${amount.toFixed(2)}\nModalidad: ${frequency}\nProgreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas\nSaldo Restante: RD$ ${(nuevasFaltantes * amount).toFixed(2)}\n------------------------------\n¡Gracias por mantener su\ncrédito al día con nosotros!`;
+            const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\n RECIBO DE PAGO OFICIAL\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nCobro / Abono: RD$ ${pagoAmount.toFixed(2)}\nModalidad: ${frequency}\nProgreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas\nSaldo Restante: RD$ ${(nuevasFaltantes * pagoAmount).toFixed(2)}\n------------------------------\n¡Gracias por mantener su\ncrédito al día con nosotros!`;
 
             document.getElementById('modal-ticket-text').innerText = ticketStr;
             document.getElementById('modal-whatsapp-btn').href = "https://wa.me/?text=" + encodeURIComponent(ticketStr);
