@@ -391,7 +391,7 @@
             }
         });
 
-        // Registrar Cobro y Mostrar el Formato Exacto del Ticket en Modal
+        // Registrar Cobro y Mostrar el Formato Exacto del Ticket en Modal (Permitiendo seleccionar el chat libremente en WhatsApp)
         window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
             if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
@@ -417,7 +417,6 @@
                 if(!error) {
                     loansRef.child(loanId).update({ faltantes: nuevasFaltantes });
 
-                    // Construcción exacta del ticket visual estilo la foto
                     const ticketStr = 
 `==============================
    E&S PRESTA FÁCIL PRO
@@ -437,7 +436,11 @@ crédito al día con nosotros!`;
 
                     document.getElementById('modal-ticket-text').innerText = ticketStr;
                     const encodedText = encodeURIComponent(ticketStr);
-                    document.getElementById('modal-whatsapp-btn').href = `https://wa.me/${phone}?text=${encodedText}`;
+                    
+                    // Modificación clave: si hay teléfono registrado abre directo con él, de lo contrario abre WhatsApp para seleccionar el chat libremente
+                    const waLink = phone ? `https://wa.me/${phone}?text=${encodedText}` : `https://api.whatsapp.com/send?text=${encodedText}`;
+                    document.getElementById('modal-whatsapp-btn').href = waLink;
+                    
                     document.getElementById('modal-overlay').style.display = 'flex';
                 } else {
                     alert('Error al registrar cobro: ' + error.message);
