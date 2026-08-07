@@ -124,7 +124,7 @@
             <h2>📋 Cobros Pendientes y Ruta</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Cliente</th><th>Cuota (RD$)</th><th>Faltantes</th><th>Acciones</th></tr></thead>
+                    <thead><tr><th>Cliente</th><th>Cuota (RD$)</th><th>Faltantes / Total (Tocable)</th><th>Acciones</th></tr></thead>
                     <tbody id="routeTableBody"><tr><td colspan="4" style="text-align:center;">Cargando ruta de cobro...</td></tr></tbody>
                 </table>
             </div>
@@ -273,9 +273,51 @@
             if(!data) return;
             for(let id in data) {
                 const item = data[id];
-                tbody.innerHTML += `<tr><td><strong>${item.client}</strong></td><td>RD$ ${item.installment.toFixed(2)}</td><td>${item.faltantes} / ${item.totalCuotas}</td><td><button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button><button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️</button><button class="btn-delete" onclick="eliminarPrestamo('${id}')">X</button></td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.client}</strong></td>
+                        <td>RD$ ${item.installment.toFixed(2)}</td>
+                        <td>
+                            <span onclick="editarCuotas('${id}', ${item.faltantes}, ${item.totalCuotas})" style="background: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e293b; display: inline-block;" title="Haz clic para editar cuotas">
+                                ${item.faltantes} / ${item.totalCuotas} ✏️
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button>
+                            <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️</button>
+                            <button class="btn-delete" onclick="eliminarPrestamo('${id}')">X</button>
+                        </td>
+                    </tr>
+                `;
             }
         });
+
+        // Función para editar directamente las cuotas faltantes y el total desde la ruta
+        window.editarCuotas = function(loanId, currentFaltantes, currentTotal) {
+            const nuevoFaltantes = prompt("Editar cuotas FALTANTES:", currentFaltantes);
+            if(nuevoFaltantes === null) return;
+            const nuevoTotal = prompt("Editar TOTAL de cuotas:", currentTotal);
+            if(nuevoTotal === null) return;
+
+            const f = parseInt(nuevoFaltantes);
+            const t = parseInt(nuevoTotal);
+
+            if(isNaN(f) || isNaN(t)) {
+                alert("Por favor introduce números válidos.");
+                return;
+            }
+
+            loansRef.child(loanId).update({
+                faltantes: f,
+                totalCuotas: t
+            }, (error) => {
+                if(!error) {
+                    alert("Cuotas actualizadas correctamente.");
+                } else {
+                    alert("Error al actualizar: " + error.message);
+                }
+            });
+        };
 
         window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
             if(faltantes <= 0) { alert('Ya pagado.'); return; }
@@ -283,8 +325,7 @@
             const dateStr = now.toLocaleDateString('es-DO');
             const nuevasFaltantes = faltantes - 1;
             
-            // Calculamos el inicio de semana (Lunes) en formato de medianoche para que se agrupe limpiamente cada 7 días (Lunes a Domingo)
-            const dayOfWeek = now.getDay(); // 0 es Domingo, 1 es Lunes, etc.
+            const dayOfWeek = now.getDay();
             const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
             const mondayDate = new Date(now.setDate(diffToMonday));
             mondayDate.setHours(0, 0, 0, 0);
@@ -313,7 +354,6 @@
         window.imprimirTicket = function(client, amount, faltantes) { window.print(); };
         window.eliminarPrestamo = function(id) { if(confirm('¿Borrar?')) loansRef.child(id).remove(); }
 
-        // Función para eliminar un pago individual del historial
         window.eliminarPago = function(paymentId) {
             if(confirm('¿Estás seguro de que deseas eliminar este registro de pago?')) {
                 paymentsRef.child(paymentId).remove();
@@ -331,7 +371,6 @@
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth() + 1;
 
-            // Identificador de la semana actual basado en el Lunes
             const dayOfWeek = now.getDay();
             const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
             const currentMonday = new Date(now.setDate(diffToMonday));
@@ -348,7 +387,6 @@
                 items.reverse();
 
                 items.forEach(pago => {
-                    // Cálculo exacto por periodos naturales solicitados (Diario cada 24h, Semanal cada Lunes, Mensual y Anual)
                     if(pago.dateStr === todayStr) {
                         totalToday += pago.amount;
                     }
