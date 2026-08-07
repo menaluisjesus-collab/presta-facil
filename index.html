@@ -22,11 +22,12 @@
         .btn { display: inline-block; width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn:hover { background-color: #219150; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
         th { background-color: #f8f9fa; }
-        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
+        .btn-action { background-color: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-bottom: 4px; display: block; width: 100%; text-align: center; }
+        .btn-sub { background-color: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-bottom: 4px; display: block; width: 100%; text-align: center; }
         .btn-print { background-color: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
-        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 3px; }
+        .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-right: 3px; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }
         .kpi-card h3 { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
@@ -102,7 +103,7 @@
                 </div>
                 <div class="form-group">
                     <label>Monto Prestado (RD$)</label>
-                    <input type="number" id="loanAmount" placeholder="5000" required>
+                    <input type="number" id="loanAmount" placeholder="15000" required>
                 </div>
                 <div class="form-group">
                     <label>Frecuencia de Pago</label>
@@ -115,12 +116,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Monto por Cuota / Interés (RD$)</label>
-                    <input type="number" id="loanInstallment" placeholder="300" required>
+                    <label>Monto por Cuota (RD$)</label>
+                    <input type="number" id="loanInstallment" placeholder="425" required>
                 </div>
                 <div class="form-group" id="groupTotalCuotas">
-                    <label>Total de Cuotas</label>
-                    <input type="number" id="loanTotalCuotas" value="20">
+                    <label>Total de Cuotas / Días</label>
+                    <input type="number" id="loanTotalCuotas" value="41" required>
                 </div>
                 <button type="submit" class="btn">Crear Préstamo</button>
             </form>
@@ -130,8 +131,8 @@
             <h2>📋 Cobros Pendientes y Ruta</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Cliente</th><th>Cuota (RD$)</th><th>Progreso / Faltantes (Tocable)</th><th>Acciones</th></tr></thead>
-                    <tbody id="routeTableBody"><tr><td colspan="4" style="text-align:center;">Cargando ruta de cobro...</td></tr></tbody>
+                    <thead><tr><th>Cliente</th><th>Cuota</th><th>Progreso / Faltantes</th><th>Rédito Atrasado</th><th>Acciones</th></tr></thead>
+                    <tbody id="routeTableBody"><tr><td colspan="5" style="text-align:center;">Cargando ruta de cobro...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -171,7 +172,7 @@
         <p><strong>Fecha:</strong> <span id="print-date"></span></p>
         <p><strong>Cliente:</strong> <span id="print-client"></span></p>
         <p><strong>Monto Abonado:</strong> RD$ <span id="print-amount"></span></p>
-        <p><strong>Cuotas Restantes:</strong> <span id="print-faltantes"></span></p>
+        <p><strong>Detalle:</strong> <span id="print-faltantes"></span></p>
         <hr style="margin: 10px 0;">
         <p style="text-align:center;"><small>¡Gracias por su pago puntual!</small></p>
     </div>
@@ -204,7 +205,6 @@
             }
         }
 
-        // Función para ocultar o mostrar el campo Total de Cuotas según la frecuencia seleccionada
         function toggleCuotasField() {
             const freq = document.getElementById('loanFrequency').value;
             const group = document.getElementById('groupTotalCuotas');
@@ -216,7 +216,7 @@
             } else {
                 group.style.display = 'block';
                 inputCuotas.setAttribute('required', 'true');
-                if(inputCuotas.value === '0') inputCuotas.value = '20';
+                if(inputCuotas.value === '0') inputCuotas.value = '41';
             }
         }
 
@@ -253,7 +253,7 @@
             for(let id in data) {
                 const item = data[id];
                 select.innerHTML += `<option value="${item.name}" data-cedula="${item.cedula || ''}" data-phone="${item.phone || ''}">${item.name}</option>`;
-                tbody.innerHTML += `<tr><td><strong>${item.name}</strong></td><td>${item.cedula || 'N/A'}</td><td>${item.phone || 'N/A'}</td><td><button class="btn-action" onclick="editarCliente('${id}', '${item.name}', '${item.cedula || ''}', '${item.phone || ''}')">Editar</button><button class="btn-delete" onclick="eliminarCliente('${id}')">Borrar</button></td></tr>`;
+                tbody.innerHTML += `<tr><td><strong>${item.name}</strong></td><td>${item.cedula || 'N/A'}</td><td>${item.phone || 'N/A'}</td><td><button class="btn-action" style="display:inline-block; width:auto;" onclick="editarCliente('${id}', '${item.name}', '${item.cedula || ''}', '${item.phone || ''}')">Editar</button><button class="btn-delete" style="display:inline-block; width:auto;" onclick="eliminarCliente('${id}')">Borrar</button></td></tr>`;
             }
         });
 
@@ -274,21 +274,35 @@
             const selectElement = document.getElementById('loanClientSelect');
             const selectedOption = selectElement.options[selectElement.selectedIndex];
             const frequency = document.getElementById('loanFrequency').value;
-            
-            const totalCuotasVal = frequency === 'A rédito / 15 y 30' ? 0 : parseInt(document.getElementById('loanTotalCuotas').value);
-            const faltantesVal = frequency === 'A rédito / 15 y 30' ? 0 : parseInt(document.getElementById('loanTotalCuotas').value);
+            const amountPrestado = parseFloat(document.getElementById('loanAmount').value);
+            const installment = parseFloat(document.getElementById('loanInstallment').value);
+            const totalCuotas = frequency === 'A rédito / 15 y 30' ? 0 : parseInt(document.getElementById('loanTotalCuotas').value);
+
+            // Cálculo automático del rédito diario (Ganancia total / días)
+            let reditoDiario = 0;
+            if (frequency !== 'A rédito / 15 y 30' && totalCuotas > 0) {
+                const totalACobrar = installment * totalCuotas;
+                const gananciaTotal = totalACobrar - amountPrestado;
+                if (gananciaTotal > 0) {
+                    reditoDiario = gananciaTotal / totalCuotas;
+                }
+            }
+
+            const nowTime = new Date().getTime();
 
             loansRef.push().set({
                 client: selectElement.value,
                 phone: selectedOption.getAttribute('data-phone') || '',
                 cedula: selectedOption.getAttribute('data-cedula') || 'N/A',
-                amount: parseFloat(document.getElementById('loanAmount').value),
+                amount: amountPrestado,
                 frequency: frequency,
-                installment: parseFloat(document.getElementById('loanInstallment').value),
-                faltantes: faltantesVal,
-                totalCuotas: totalCuotasVal
+                installment: installment,
+                faltantes: totalCuotas,
+                totalCuotas: totalCuotas,
+                reditoDiario: reditoDiario,
+                ultimoCobroTimestamp: nowTime
             });
-            alert('Préstamo creado');
+            alert('Préstamo creado con éxito');
             document.getElementById('loanForm').reset();
             toggleCuotasField();
             switchTab('ruta');
@@ -299,20 +313,42 @@
             tbody.innerHTML = '';
             const data = snapshot.val();
             if(!data) return;
+
+            const now = new Date().getTime();
+            const unDiaMs = 24 * 60 * 60 * 1000;
+
             for(let id in data) {
                 const item = data[id];
+                
+                // Calcular días de atraso de rédito basados en el tiempo transcurrido desde el último cobro/creación
+                let ultimoCobro = item.ultimoCobroTimestamp || now;
+                let diasTranscurridos = Math.floor((now - ultimoCobro) / unDiaMs);
+                if(diasTranscurridos < 0) diasTranscurridos = 0;
+
+                let reditoAtrasadoCalc = 0;
+                let reditoDiarioVal = item.reditoDiario || 0;
+                if (reditoDiarioVal > 0 && diasTranscurridos > 0) {
+                    reditoAtrasadoCalc = diasTranscurridos * reditoDiarioVal;
+                }
+
                 const displayCuotas = item.frequency === 'A rédito / 15 y 30' 
-                    ? `<span style="background: #e2e8f0; padding: 5px 10px; border-radius: 6px; font-weight: bold; color: #1e293b; display: inline-block;">A rédito (Fijo)</span>`
-                    : `<span onclick="editarCuotas('${id}', ${item.faltantes}, ${item.totalCuotas})" style="background: #e2e8f0; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e293b; display: inline-block;" title="Haz clic para editar cuotas">${item.faltantes} / ${item.totalCuotas} ✏️</span>`;
+                    ? `<span style="background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-weight: bold; color: #1e293b; display: inline-block;">A rédito (Fijo)</span>`
+                    : `<span onclick="editarCuotas('${id}', ${item.faltantes}, ${item.totalCuotas})" style="background: #e2e8f0; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e293b; display: inline-block;" title="Haz clic para editar cuotas">${item.faltantes} / ${item.totalCuotas} ✏️</span>`;
+
+                const displayReditoAtrasado = reditoDiarioVal > 0 
+                    ? `<span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block;">RD$ ${reditoAtrasadoCalc.toFixed(2)} (${diasTranscurridos}d)</span>`
+                    : `<span style="color: #64748b; font-size: 0.85rem;">N/A</span>`;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${item.client}</strong></td>
+                        <td><strong>${item.client}</strong><br><small style="color:#64748b;">${item.frequency}</small></td>
                         <td>RD$ ${item.installment.toFixed(2)}</td>
                         <td>${displayCuotas}</td>
+                        <td>${displayReditoAtrasado}</td>
                         <td>
-                            <button class="btn-action" onclick="cobrar('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}')">Cobrar 💵</button>
-                            <button class="btn-print" onclick="imprimirTicket('${item.client}', ${item.installment}, ${item.faltantes})">🖨️</button>
+                            <button class="btn-action" onclick="cobrarCompleto('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${item.installment}, ${item.faltantes}, ${item.totalCuotas}, '${item.frequency}', ${reditoAtrasadoCalc})">Cobrar Completo 💵</button>
+                            <button class="btn-sub" onclick="pagarSoloRedito('${id}', '${item.client}', '${item.cedula || 'N/A'}', '${item.phone || ''}', ${reditoAtrasadoCalc}, '${item.frequency}')">💳 Pagar Solo Rédito</button>
+                            <button class="btn-print" onclick="imprimirTicket()">🖨️</button>
                             <button class="btn-delete" onclick="eliminarPrestamo('${id}')">X</button>
                         </td>
                     </tr>
@@ -334,20 +370,16 @@
                 return;
             }
 
-            loansRef.child(loanId).update({
-                faltantes: f,
-                totalCuotas: t
-            }, (error) => {
-                if(!error) {
-                    alert("Cuotas actualizadas correctamente.");
-                } else {
-                    alert("Error al actualizar: " + error.message);
-                }
+            loansRef.child(loanId).update({ faltantes: f, totalCuotas: t }, (error) => {
+                if(!error) alert("Cuotas actualizadas correctamente.");
             });
         };
 
-        window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
-            if(frequency !== 'A rédito / 15 y 30' && faltantes <= 0) { alert('Ya pagado.'); return; }
+        // Cobrar Cuota Normal + Rédito Atrasado acumulado
+        window.cobrarCompleto = function(loanId, clientName, cedula, phone, installmentAmount, faltantes, totalCuotas, frequency, reditoAtrasado) {
+            if(frequency !== 'A rédito / 15 y 30' && faltantes <= 0) { alert('Este préstamo ya está totalmente pagado.'); return; }
+            
+            const montoTotalCobrado = installmentAmount + reditoAtrasado;
             const now = new Date();
             const dateStr = now.toLocaleDateString('es-DO');
             const nuevasFaltantes = frequency === 'A rédito / 15 y 30' ? 0 : faltantes - 1;
@@ -361,21 +393,63 @@
             paymentsRef.push().set({ 
                 loanId, 
                 client: clientName, 
-                amount, 
+                amount: montoTotalCobrado, 
                 timestamp: now.getTime(), 
                 dateStr, 
                 year: now.getFullYear(), 
                 month: now.getMonth() + 1,
                 weekIdentifier: weekIdentifier
             });
-            
-            if(frequency !== 'A rédito / 15 y 30') {
-                loansRef.child(loanId).update({ faltantes: nuevasFaltantes });
+
+            loansRef.child(loanId).update({ 
+                faltantes: nuevasFaltantes,
+                ultimoCobroTimestamp: now.getTime()
+            });
+
+            const detalleStr = frequency === 'A rédito / 15 y 30' 
+                ? `Modalidad A Rédito (15 y 30)\nCuota Base: RD$ ${installmentAmount.toFixed(2)}\nRédito del día: RD$ ${reditoAtrasado.toFixed(2)}`
+                : `Progreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas\nCuota Base: RD$ ${installmentAmount.toFixed(2)}\nRédito atrasado abonado: RD$ ${reditoAtrasado.toFixed(2)}\nSaldo Capital Restante: RD$ ${(nuevasFaltantes * installmentAmount).toFixed(2)}`;
+
+            const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\n RECIBO DE PAGO OFICIAL\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nTOTAL COBRADO: RD$ ${montoTotalCobrado.toFixed(2)}\nModalidad: ${frequency}\n${detalleStr}\n------------------------------\n¡Gracias por mantener su\ncrédito al día con nosotros!`;
+
+            document.getElementById('modal-ticket-text').innerText = ticketStr;
+            document.getElementById('modal-whatsapp-btn').href = "https://wa.me/?text=" + encodeURIComponent(ticketStr);
+            document.getElementById('modal-overlay').style.display = 'flex';
+        };
+
+        // Pagar solo los réditos atrasados al paso
+        window.pagarSoloRedito = function(loanId, clientName, cedula, phone, reditoAtrasado, frequency) {
+            if(reditoAtrasado <= 0) {
+                alert("No hay réditos atrasados pendientes de cobro en este momento.");
+                return;
             }
 
-            const progresoStr = frequency === 'A rédito / 15 y 30' ? 'Modalidad A Rédito (15 y 30)' : `Progreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas\nSaldo Restante: RD$ ${(nuevasFaltantes * amount).toFixed(2)}`;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-DO');
+            
+            const dayOfWeek = now.getDay();
+            const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const mondayDate = new Date(now.setDate(diffToMonday));
+            mondayDate.setHours(0, 0, 0, 0);
+            const weekIdentifier = mondayDate.getTime();
 
-            const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\n RECIBO DE PAGO OFICIAL\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nCuota Pagada: RD$ ${amount.toFixed(2)}\nModalidad: ${frequency}\n${progresoStr}\n------------------------------\n¡Gracias por mantener su\ncrédito al día con nosotros!`;
+            paymentsRef.push().set({ 
+                loanId, 
+                client: clientName, 
+                amount: reditoAtrasado, 
+                timestamp: now.getTime(), 
+                dateStr, 
+                year: now.getFullYear(), 
+                month: now.getMonth() + 1,
+                weekIdentifier: weekIdentifier
+            });
+
+            // Reiniciamos el contador de tiempo del rédito al paso
+            loansRef.child(loanId).update({ 
+                ultimoCobroTimestamp: now.getTime()
+            });
+
+            const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\nRECIBO DE ABONO A RÉDITOS\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nAbono Rédito: RD$ ${reditoAtrasado.toFixed(2)}\nModalidad: ${frequency}\nConcepto: Pago de réditos al paso\n------------------------------\n¡Gracias por su abono oportuno!`;
 
             document.getElementById('modal-ticket-text').innerText = ticketStr;
             document.getElementById('modal-whatsapp-btn').href = "https://wa.me/?text=" + encodeURIComponent(ticketStr);
@@ -383,8 +457,8 @@
         };
 
         window.closeModal = function() { document.getElementById('modal-overlay').style.display = 'none'; }
-        window.imprimirTicket = function(client, amount, faltantes) { window.print(); };
-        window.eliminarPrestamo = function(id) { if(confirm('¿Borrar?')) loansRef.child(id).remove(); }
+        window.imprimirTicket = function() { window.print(); };
+        window.eliminarPrestamo = function(id) { if(confirm('¿Seguro que deseas eliminar este préstamo?')) loansRef.child(id).remove(); }
 
         window.eliminarPago = function(paymentId) {
             if(confirm('¿Estás seguro de que deseas eliminar este registro de pago?')) {
@@ -438,7 +512,7 @@
                             <td><strong>${pago.client}</strong></td>
                             <td>RD$ ${pago.amount.toFixed(2)}</td>
                             <td>
-                                <button class="btn-delete" onclick="eliminarPago('${pago.id}')">X</button>
+                                <button class="btn-delete" style="display:inline-block; width:auto;" onclick="eliminarPago('${pago.id}')">X</button>
                             </td>
                         </tr>
                     `;
