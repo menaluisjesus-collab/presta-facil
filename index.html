@@ -79,8 +79,8 @@
                     <input type="text" id="clientCedula" placeholder="001-0000000-0" required>
                 </div>
                 <div class="form-group">
-                    <label>Teléfono (Para WhatsApp)</label>
-                    <input type="tel" id="clientPhone" placeholder="18090000000" required>
+                    <label>Teléfono (Para referencia)</label>
+                    <input type="tel" id="clientPhone" placeholder="18090000000">
                 </div>
                 <button type="submit" class="btn" id="clientSubmitBtn">Guardar Cliente</button>
                 <button type="button" id="cancelEditClientBtn" class="btn" style="background-color: #64748b; margin-top: 8px; display:none;" onclick="resetClientForm()">Cancelar Edición</button>
@@ -205,7 +205,7 @@
             <h3 style="color: #27ae60; margin-bottom: 5px;">✅ Cobro Registrado</h3>
             <p style="font-size: 0.85rem; color: #64748b;">Recibo generado para WhatsApp:</p>
             <div class="ticket-pre" id="modal-ticket-text"></div>
-            <a id="modal-whatsapp-btn" class="modal-btn-wa" href="#" target="_blank">Enviar por WhatsApp 📲</a>
+            <a id="modal-whatsapp-btn" class="modal-btn-wa" href="#" target="_blank">Abrir WhatsApp y Enviar 📲</a>
             <button class="modal-btn-close" onclick="closeModal()">Cerrar</button>
         </div>
     </div>
@@ -391,7 +391,7 @@
             }
         });
 
-        // Registrar Cobro y Mostrar el Formato Exacto del Ticket en Modal (Permitiendo seleccionar el chat libremente en WhatsApp)
+        // Registrar Cobro, Copiar al Portapapeles y Abrir WhatsApp para seleccionar contacto libremente
         window.cobrar = function(loanId, clientName, cedula, phone, amount, faltantes, totalCuotas, frequency) {
             if(faltantes <= 0) {
                 alert('El préstamo ya se encuentra pagado por completo.');
@@ -435,11 +435,16 @@ Saldo Restante: RD$ ${saldoRestante.toFixed(2)}
 crédito al día con nosotros!`;
 
                     document.getElementById('modal-ticket-text').innerText = ticketStr;
-                    const encodedText = encodeURIComponent(ticketStr);
                     
-                    // Modificación clave: si hay teléfono registrado abre directo con él, de lo contrario abre WhatsApp para seleccionar el chat libremente
-                    const waLink = phone ? `https://wa.me/${phone}?text=${encodedText}` : `https://api.whatsapp.com/send?text=${encodedText}`;
-                    document.getElementById('modal-whatsapp-btn').href = waLink;
+                    // Copiamos el ticket automáticamente al portapapeles del dispositivo
+                    navigator.clipboard.writeText(ticketStr).then(() => {
+                        console.log("Recibo copiado al portapapeles con éxito.");
+                    }).catch(err => {
+                        console.error("Error al copiar automáticamente: ", err);
+                    });
+                    
+                    // Enlace de WhatsApp sin forzar número: abre la lista de chats para elegir libremente al cliente
+                    document.getElementById('modal-whatsapp-btn').href = "https://wa.me/?text=" + encodeURIComponent(ticketStr);
                     
                     document.getElementById('modal-overlay').style.display = 'flex';
                 } else {
