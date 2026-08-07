@@ -141,8 +141,8 @@
             <h2 style="margin-top:20px;">📜 Historial General de Pagos</h2>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto Cobrado</th></tr></thead>
-                    <tbody id="historyTableBody"><tr><td colspan="3" style="text-align:center;">No hay registros de cobro aún.</td></tr></tbody>
+                    <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto Cobrado</th><th>Acciones</th></tr></thead>
+                    <tbody id="historyTableBody"><tr><td colspan="4" style="text-align:center;">No hay registros de cobro aún.</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -282,13 +282,29 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('es-DO');
             const nuevasFaltantes = faltantes - 1;
-            paymentsRef.push().set({ loanId, client: clientName, amount, timestamp: now.getTime(), dateStr, year: now.getFullYear(), month: now.getMonth() + 1 });
+            
+            // Calculamos el inicio de semana (Lunes) en formato de medianoche para que se agrupe limpiamente cada 7 días (Lunes a Domingo)
+            const dayOfWeek = now.getDay(); // 0 es Domingo, 1 es Lunes, etc.
+            const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const mondayDate = new Date(now.setDate(diffToMonday));
+            mondayDate.setHours(0, 0, 0, 0);
+            const weekIdentifier = mondayDate.getTime();
+
+            paymentsRef.push().set({ 
+                loanId, 
+                client: clientName, 
+                amount, 
+                timestamp: now.getTime(), 
+                dateStr, 
+                year: now.getFullYear(), 
+                month: now.getMonth() + 1,
+                weekIdentifier: weekIdentifier
+            });
             loansRef.child(loanId).update({ faltantes: nuevasFaltantes });
 
             const ticketStr = `==============================\n   E&S PRESTA FÁCIL PRO\n RECIBO DE PAGO OFICIAL\n==============================\nFecha: ${dateStr}\nCliente: ${clientName.toUpperCase()}\nCédula: ${cedula}\n------------------------------\nCuota Pagada: RD$ ${amount.toFixed(2)}\nModalidad: ${frequency}\nProgreso: ${(totalCuotas - nuevasFaltantes)} de ${totalCuotas} cuotas\nSaldo Restante: RD$ ${(nuevasFaltantes * amount).toFixed(2)}\n------------------------------\n¡Gracias por mantener su\ncrédito al día con nosotros!`;
 
             document.getElementById('modal-ticket-text').innerText = ticketStr;
-            // Aquí está la mejora: enlace limpio que envía SOLO el ticket como formato de texto
             document.getElementById('modal-whatsapp-btn').href = "https://wa.me/?text=" + encodeURIComponent(ticketStr);
             document.getElementById('modal-overlay').style.display = 'flex';
         };
@@ -297,15 +313,72 @@
         window.imprimirTicket = function(client, amount, faltantes) { window.print(); };
         window.eliminarPrestamo = function(id) { if(confirm('¿Borrar?')) loansRef.child(id).remove(); }
 
+        // Función para eliminar un pago individual del historial
+        window.eliminarPago = function(paymentId) {
+            if(confirm('¿Estás seguro de que deseas eliminar este registro de pago?')) {
+                paymentsRef.child(paymentId).remove();
+            }
+        };
+
         paymentsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
-            if(!data) return;
-            let items = Object.values(data).reverse();
-            items.forEach(pago => {
-                tbody.innerHTML += `<tr><td>${pago.dateStr}</td><td><strong>${pago.client}</strong></td><td>RD$ ${pago.amount.toFixed(2)}</td></tr>`;
-            });
+            
+            let totalToday = 0, totalWeek = 0, totalMonth = 0, totalYear = 0;
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('es-DO');
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+
+            // Identificador de la semana actual basado en el Lunes
+            const dayOfWeek = now.getDay();
+            const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const currentMonday = new Date(now.setDate(diffToMonday));
+            currentMonday.setHours(0, 0, 0, 0);
+            const currentWeekId = currentMonday.getTime();
+
+            if(!data) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay registros de cobro aún.</td></tr>';
+            } else {
+                let items = [];
+                for(let id in data) { 
+                    items.push({ id: id, ...data[id] }); 
+                }
+                items.reverse();
+
+                items.forEach(pago => {
+                    // Cálculo exacto por periodos naturales solicitados (Diario cada 24h, Semanal cada Lunes, Mensual y Anual)
+                    if(pago.dateStr === todayStr) {
+                        totalToday += pago.amount;
+                    }
+                    if(pago.weekIdentifier === currentWeekId) {
+                        totalWeek += pago.amount;
+                    }
+                    if(pago.year === currentYear && pago.month === currentMonth) {
+                        totalMonth += pago.amount;
+                    }
+                    if(pago.year === currentYear) {
+                        totalYear += pago.amount;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${pago.dateStr}</td>
+                            <td><strong>${pago.client}</strong></td>
+                            <td>RD$ ${pago.amount.toFixed(2)}</td>
+                            <td>
+                                <button class="btn-delete" onclick="eliminarPago('${pago.id}')">X</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('kpiToday').innerText = `RD$ ${totalToday.toFixed(2)}`;
+            document.getElementById('kpiWeek').innerText = `RD$ ${totalWeek.toFixed(2)}`;
+            document.getElementById('kpiMonth').innerText = `RD$ ${totalMonth.toFixed(2)}`;
+            document.getElementById('kpiYear').innerText = `RD$ ${totalYear.toFixed(2)}`;
         });
     </script>
 </body>
