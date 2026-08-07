@@ -116,6 +116,19 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Día Libre / No Laborable (Sin Mora ni Rédito)</label>
+                    <select id="loanDiaLibre">
+                        <option value="ninguno">Ninguno (Cobra todos los días)</option>
+                        <option value="0">Domingo</option>
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Monto por Cuota (RD$)</label>
                     <input type="number" id="loanInstallment" placeholder="425" required>
                 </div>
@@ -274,11 +287,11 @@
             const selectElement = document.getElementById('loanClientSelect');
             const selectedOption = selectElement.options[selectElement.selectedIndex];
             const frequency = document.getElementById('loanFrequency').value;
+            const diaLibre = document.getElementById('loanDiaLibre').value;
             const amountPrestado = parseFloat(document.getElementById('loanAmount').value);
             const installment = parseFloat(document.getElementById('loanInstallment').value);
             const totalCuotas = frequency === 'A rédito / 15 y 30' ? 0 : parseInt(document.getElementById('loanTotalCuotas').value);
 
-            // Cálculo automático del rédito diario (Ganancia total / días)
             let reditoDiario = 0;
             if (frequency !== 'A rédito / 15 y 30' && totalCuotas > 0) {
                 const totalACobrar = installment * totalCuotas;
@@ -296,6 +309,7 @@
                 cedula: selectedOption.getAttribute('data-cedula') || 'N/A',
                 amount: amountPrestado,
                 frequency: frequency,
+                diaLibre: diaLibre,
                 installment: installment,
                 faltantes: totalCuotas,
                 totalCuotas: totalCuotas,
@@ -314,34 +328,49 @@
             const data = snapshot.val();
             if(!data) return;
 
-            const now = new Date().getTime();
+            const now = new Date();
+            const currentTime = now.getTime();
             const unDiaMs = 24 * 60 * 60 * 1000;
 
             for(let id in data) {
                 const item = data[id];
                 
-                // Calcular días de atraso de rédito basados en el tiempo transcurrido desde el último cobro/creación
-                let ultimoCobro = item.ultimoCobroTimestamp || now;
-                let diasTranscurridos = Math.floor((now - ultimoCobro) / unDiaMs);
-                if(diasTranscurridos < 0) diasTranscurridos = 0;
-
-                let reditoAtrasadoCalc = 0;
+                let ultimoCobro = item.ultimoCobroTimestamp || currentTime;
                 let reditoDiarioVal = item.reditoDiario || 0;
-                if (reditoDiarioVal > 0 && diasTranscurridos > 0) {
-                    reditoAtrasadoCalc = diasTranscurridos * reditoDiarioVal;
+                let reditoAtrasadoCalc = 0;
+                let diasDeAtrasoReales = 0;
+
+                if (reditoDiarioVal > 0) {
+                    // Recorremos día por día desde el último cobro hasta hoy para descontar el día libre configurado
+                    let cursorTime = ultimoCobro + unDiaMs;
+                    while (cursorTime <= currentTime) {
+                        let fechaCursor = new Date(cursorTime);
+                        let diaSemanaCursor = fechaCursor.getDay().toString(); // 0: Dom, 1: Lun, etc.
+                        
+                        // Si el día actual del bucle NO es el día libre del cliente, cuenta como día de mora/rédito
+                        if (item.diaLibre === undefined || item.diaLibre === 'ninguno' || diaSemanaCursor !== item.diaLibre) {
+                            diasDeAtrasoReales++;
+                        }
+                        cursorTime += unDiaMs;
+                    }
+                    if(diasDeAtrasoReales < 0) diasDeAtrasoReales = 0;
+                    reditoAtrasadoCalc = diasDeAtrasoReales * reditoDiarioVal;
                 }
 
                 const displayCuotas = item.frequency === 'A rédito / 15 y 30' 
                     ? `<span style="background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-weight: bold; color: #1e293b; display: inline-block;">A rédito (Fijo)</span>`
                     : `<span onclick="editarCuotas('${id}', ${item.faltantes}, ${item.totalCuotas})" style="background: #e2e8f0; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #1e293b; display: inline-block;" title="Haz clic para editar cuotas">${item.faltantes} / ${item.totalCuotas} ✏️</span>`;
 
+                const nombreDias = { '0': 'Domingo', '1': 'Lunes', '2': 'Martes', '3': 'Miércoles', '4': 'Jueves', '5': 'Viernes', '6': 'Sábado' };
+                const textoDiaLibre = (item.diaLibre && item.diaLibre !== 'ninguno') ? `<br><small style="color:#8e44ad;">Libre: ${nombreDias[item.diaLibre]}</small>` : '';
+
                 const displayReditoAtrasado = reditoDiarioVal > 0 
-                    ? `<span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block;">RD$ ${reditoAtrasadoCalc.toFixed(2)} (${diasTranscurridos}d)</span>`
+                    ? `<span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block;">RD$ ${reditoAtrasadoCalc.toFixed(2)} (${diasDeAtrasoReales}d)</span>`
                     : `<span style="color: #64748b; font-size: 0.85rem;">N/A</span>`;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${item.client}</strong><br><small style="color:#64748b;">${item.frequency}</small></td>
+                        <td><strong>${item.client}</strong><br><small style="color:#64748b;">${item.frequency}</small>${textoDiaLibre}</td>
                         <td>RD$ ${item.installment.toFixed(2)}</td>
                         <td>${displayCuotas}</td>
                         <td>${displayReditoAtrasado}</td>
@@ -375,7 +404,6 @@
             });
         };
 
-        // Cobrar Cuota Normal + Rédito Atrasado acumulado
         window.cobrarCompleto = function(loanId, clientName, cedula, phone, installmentAmount, faltantes, totalCuotas, frequency, reditoAtrasado) {
             if(frequency !== 'A rédito / 15 y 30' && faltantes <= 0) { alert('Este préstamo ya está totalmente pagado.'); return; }
             
@@ -417,7 +445,6 @@
             document.getElementById('modal-overlay').style.display = 'flex';
         };
 
-        // Pagar solo los réditos atrasados al paso
         window.pagarSoloRedito = function(loanId, clientName, cedula, phone, reditoAtrasado, frequency) {
             if(reditoAtrasado <= 0) {
                 alert("No hay réditos atrasados pendientes de cobro en este momento.");
@@ -444,7 +471,6 @@
                 weekIdentifier: weekIdentifier
             });
 
-            // Reiniciamos el contador de tiempo del rédito al paso
             loansRef.child(loanId).update({ 
                 ultimoCobroTimestamp: now.getTime()
             });
