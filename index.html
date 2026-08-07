@@ -106,7 +106,13 @@
                 </div>
                 <div class="form-group">
                     <label>Frecuencia de Pago</label>
-                    <select id="loanFrequency"><option value="Diario">Diario</option><option value="Semanal">Semanal</option><option value="Quincenal">Quincenal</option><option value="Mensual">Mensual</option></select>
+                    <select id="loanFrequency">
+                        <option value="Diario">Diario</option>
+                        <option value="Semanal">Semanal</option>
+                        <option value="Quincenal">Quincenal</option>
+                        <option value="Mensual">Mensual</option>
+                        <option value="A rédito / 15 y 30">A rédito / 15 y 30</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Monto por Cuota (RD$)</label>
@@ -292,7 +298,6 @@
             }
         });
 
-        // Función para editar directamente las cuotas faltantes y el total desde la ruta
         window.editarCuotas = function(loanId, currentFaltantes, currentTotal) {
             const nuevoFaltantes = prompt("Editar cuotas FALTANTES:", currentFaltantes);
             if(nuevoFaltantes === null) return;
