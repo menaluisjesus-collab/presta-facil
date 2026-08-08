@@ -112,6 +112,20 @@
                     <label>Teléfono (Para referencia)</label>
                     <input type="tel" id="clientPhone" placeholder="18090000000">
                 </div>
+                <!-- SE CONSERVA INTACTO: Selección de Día Libre -->
+                <div class="form-group">
+                    <label>Día Libre / No se cobra</label>
+                    <select id="clientFreeDay">
+                        <option value="Ninguno">Ninguno (Cobra todos los días)</option>
+                        <option value="Lunes">Lunes</option>
+                        <option value="Martes">Martes</option>
+                        <option value="Miércoles">Miércoles</option>
+                        <option value="Jueves">Jueves</option>
+                        <option value="Viernes">Viernes</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn" id="clientSubmitBtn">Guardar Cliente</button>
                 <button type="button" id="cancelEditClientBtn" class="btn" style="background-color: #64748b; margin-top: 8px; display:none;" onclick="resetClientForm()">Cancelar Edición</button>
             </form>
@@ -119,8 +133,8 @@
             <h3 style="font-size: 1rem; margin-bottom: 10px; color: #2c3e50;">Clientes Registrados</h3>
             <div style="overflow-x: auto;">
                 <table>
-                    <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Acciones</th></tr></thead>
-                    <tbody id="clientsTableBody"><tr><td colspan="4" style="text-align:center;">Cargando clientes...</td></tr></tbody>
+                    <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Día Libre</th><th>Acciones</th></tr></thead>
+                    <tbody id="clientsTableBody"><tr><td colspan="5" style="text-align:center;">Cargando clientes...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -225,7 +239,6 @@
         
         let clientsRef, loansRef, paymentsRef;
 
-        // Control de Sesión
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
@@ -293,11 +306,13 @@
             const name = document.getElementById('clientName').value;
             const cedula = document.getElementById('clientCedula').value;
             const phone = document.getElementById('clientPhone').value;
+            const freeDay = document.getElementById('clientFreeDay').value;
+
             if(editId) {
-                clientsRef.child(editId).update({ name, cedula, phone });
+                clientsRef.child(editId).update({ name, cedula, phone, freeDay });
                 resetClientForm();
             } else {
-                clientsRef.push().set({ name, cedula, phone });
+                clientsRef.push().set({ name, cedula, phone, freeDay });
                 document.getElementById('clientForm').reset();
                 switchTab('prestamos');
             }
@@ -308,6 +323,7 @@
             document.getElementById('editClientId').value = '';
             document.getElementById('clientSubmitBtn').innerText = 'Guardar Cliente';
             document.getElementById('cancelEditClientBtn').style.display = 'none';
+            document.getElementById('clientFreeDay').value = 'Ninguno';
         }
 
         function cargarDatosApp() {
@@ -318,13 +334,13 @@
                 tbody.innerHTML = '';
                 const data = snapshot.val();
                 if(!data) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay clientes registrados.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay clientes registrados.</td></tr>';
                     return;
                 }
                 for(let id in data) {
                     const item = data[id];
-                    select.innerHTML += `<option value="${item.name}" data-cedula="${item.cedula || ''}" data-phone="${item.phone || ''}">${item.name}</option>`;
-                    tbody.innerHTML += `<tr><td><strong>${item.name}</strong></td><td>${item.cedula || 'N/A'}</td><td>${item.phone || 'N/A'}</td><td><button class="btn-action" style="display:inline-block; width:auto;" onclick="editarCliente('${id}', '${item.name}', '${item.cedula || ''}', '${item.phone || ''}')">Editar</button><button class="btn-delete" style="display:inline-block; width:auto;" onclick="eliminarCliente('${id}')">Borrar</button></td></tr>`;
+                    select.innerHTML += `<option value="${item.name}" data-cedula="${item.cedula || ''}" data-phone="${item.phone || ''}" data-freeday="${item.freeDay || 'Ninguno'}">${item.name}</option>`;
+                    tbody.innerHTML += `<tr><td><strong>${item.name}</strong></td><td>${item.cedula || 'N/A'}</td><td>${item.phone || 'N/A'}</td><td><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">${item.freeDay || 'Ninguno'}</span></td><td><button class="btn-action" style="display:inline-block; width:auto;" onclick="editarCliente('${id}', '${item.name}', '${item.cedula || ''}', '${item.phone || ''}', '${item.freeDay || 'Ninguno'}')">Editar</button><button class="btn-delete" style="display:inline-block; width:auto;" onclick="eliminarCliente('${id}')">Borrar</button></td></tr>`;
                 }
             });
 
@@ -345,7 +361,7 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${item.client}</strong><br><small style="color:#64748b;">${item.frequency}</small></td>
+                            <td><strong>${item.client}</strong><br><small style="color:#64748b;">${item.frequency} ${item.freeDay && item.freeDay !== 'Ninguno' ? '• Libre: ' + item.freeDay : ''}</small></td>
                             <td>RD$ ${item.installment.toFixed(2)}</td>
                             <td>${displayCuotas}</td>
                             <td>
@@ -419,6 +435,7 @@
                 client: selectElement.value,
                 phone: selectedOption.getAttribute('data-phone') || '',
                 cedula: selectedOption.getAttribute('data-cedula') || 'N/A',
+                freeDay: selectedOption.getAttribute('data-freeday') || 'Ninguno',
                 amount: amountPrestado,
                 frequency: frequency,
                 installment: installment,
@@ -431,11 +448,12 @@
             switchTab('ruta');
         });
 
-        window.editarCliente = function(id, name, cedula, phone) {
+        window.editarCliente = function(id, name, cedula, phone, freeDay) {
             document.getElementById('editClientId').value = id;
             document.getElementById('clientName').value = name;
             document.getElementById('clientCedula').value = cedula;
             document.getElementById('clientPhone').value = phone;
+            document.getElementById('clientFreeDay').value = freeDay || 'Ninguno';
             document.getElementById('clientSubmitBtn').innerText = 'Actualizar Cliente';
             document.getElementById('cancelEditClientBtn').style.display = 'block';
             window.scrollTo({top: 0, behavior: 'smooth'});
